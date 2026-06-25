@@ -252,8 +252,32 @@ async function seed() {
     }
 
     if (!orgId) {
-      console.warn(`  ⚠  Could not find org for ${userId} — skipping data for this tenant`);
-      continue;
+      // Trigger didn't create org (onboarding flow not run) — create it manually
+      const joinCode = Math.random().toString(36).slice(2, 10).toUpperCase();
+      const { data: newOrg, error: orgErr } = await sb
+        .from("organizations")
+        .insert({
+          name: tenant.name,
+          slug: tenant.slug,
+          status: "active",
+          enabled_modules: Array.from(tenant.modules),
+          primary_color: tenant.org.primaryColor,
+          accent_color: tenant.org.accentColor,
+          created_by: userId,
+          join_code: joinCode,
+        })
+        .select("id")
+        .single();
+      if (orgErr || !newOrg) {
+        console.warn(`  ⚠  Could not create org for ${userId}: ${orgErr?.message}`);
+        continue;
+      }
+      orgId = newOrg.id;
+      // Link profile to org
+      await sb.from("profiles").update({ organization_id: orgId }).eq("id", userId);
+      // Assign admin role
+      await sb.from("user_roles").insert({ user_id: userId, role: "admin", organization_id: orgId });
+      console.log(`  ✔  Org created manually: ${orgId}`);
     }
     console.log(`  ✔  Org: ${orgId}`);
 
