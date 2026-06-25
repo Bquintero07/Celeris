@@ -31,3 +31,36 @@ class QuoteLine(BaseModel):
 class QuoteResponse(BaseModel):
     lines: list[QuoteLine]
     notes: list[str] = []
+
+
+class EventPlanRequest(BaseModel):
+    prompt: str
+    template: str | None = None
+    currency: str = "COP"
+    budget_cap: float | None = None
+
+
+class EventPlanItem(BaseModel):
+    category: Literal[
+        "personal", "catering", "equipo", "mobiliario", "audio_video",
+        "iluminacion", "transporte", "seguridad", "permisos", "marketing", "extras",
+    ]
+    name: str
+    description: str | None = None
+    quantity: int
+    unit_cost: float
+    notes: str | None = None
+
+
+class EventPlanResponse(BaseModel):
+    title: str
+    event_type: Literal[
+        "concierto", "charla", "exposicion", "privado", "publico",
+        "corporativo", "boda", "otro",
+    ]
+    description: str
+    estimated_attendees: int
+    estimated_budget: float
+    estimated_revenue: float
+    summary: str
+    items: list[EventPlanItem] = []

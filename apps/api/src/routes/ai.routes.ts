@@ -4,11 +4,12 @@ import { requireModule } from "../middleware/module.js";
 export const aiRouter = Router();
 aiRouter.use(requireModule("ai_assistant"));
 
-// POST /api/ai/generate — proxy to Python FastAPI agent
+// POST /api/ai/generate — proxy to the agent's full new-event plan generator.
+// Body: { prompt, template, currency, budget_cap } -> full plan (header + items).
 aiRouter.post("/generate", async (req, res) => {
   const agentUrl = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
   try {
-    const upstream = await fetch(`${agentUrl}/quote/suggest`, {
+    const upstream = await fetch(`${agentUrl}/event/plan`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

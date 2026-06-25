@@ -1,6 +1,15 @@
 import type { AuthContext, QuoteSuggestLine, QuoteSuggestResponse } from "@celeris/shared";
 import { prisma } from "../lib/prisma.js";
 
+// The Python agent speaks English categories (equipment/crew/supplier); the
+// public.item_category enum is Spanish. "supplier" has no direct match — falls
+// back to "extras", same default used for manually-added items.
+const AGENT_CATEGORY_TO_ITEM_CATEGORY: Record<QuoteSuggestLine["category"], string> = {
+  equipment: "equipo",
+  crew: "personal",
+  supplier: "extras",
+};
+
 type EventItem = {
   id: string; event_id: string; category: string; name: string;
   quantity: number; unit_cost: number; total_cost: number;
@@ -158,7 +167,7 @@ export async function applyLines(
         (event_id, category, name, quantity, unit_cost, base_cost, markup_pct, notes, organization_id)
       VALUES (
         ${eventId}::uuid,
-        ${line.category}::public.item_category,
+        ${AGENT_CATEGORY_TO_ITEM_CATEGORY[line.category] ?? "extras"}::public.item_category,
         ${line.name},
         ${qty}::numeric,
         ${sellingUnitCost}::numeric,

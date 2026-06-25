@@ -22,16 +22,28 @@ orgRouter.get("/", async (req, res) => {
 orgRouter.patch("/", async (req, res) => {
   const orgId = req.ctx?.orgId;
   if (!orgId) return res.status(403).json({ error: "No organization" });
-  if (!req.ctx?.roles.includes("admin")) return res.status(403).json({ error: "Admin only" });
+  if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {
+    return res.status(403).json({ error: "Admin only" });
+  }
 
-  const { name, primary_color, accent_color, logo_url } = req.body;
+  const current = await prisma.$queryRaw<any[]>`
+    SELECT name, primary_color, accent_color, logo_url
+    FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
+  `;
+  if (!current[0]) return res.status(404).json({ error: "Organization not found" });
+
+  const body = req.body as Record<string, unknown>;
+  const name          = "name"          in body ? body.name          : current[0].name;
+  const primary_color = "primary_color" in body ? body.primary_color : current[0].primary_color;
+  const accent_color  = "accent_color"  in body ? body.accent_color  : current[0].accent_color;
+  const logo_url      = "logo_url"      in body ? body.logo_url      : current[0].logo_url;
 
   await prisma.$executeRaw`
     UPDATE public.organizations SET
-      name          = COALESCE(${name ?? null}, name),
-      primary_color = COALESCE(${primary_color ?? null}, primary_color),
-      accent_color  = COALESCE(${accent_color ?? null}, accent_color),
-      logo_url      = COALESCE(${logo_url ?? null}, logo_url),
+      name          = ${name},
+      primary_color = ${primary_color},
+      accent_color  = ${accent_color},
+      logo_url      = ${logo_url},
       updated_at    = now()
     WHERE id = ${orgId}::uuid
   `;

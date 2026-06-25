@@ -6,12 +6,12 @@ import * as svc from "../services/templates.service.js";
 export const templatesRouter = Router();
 templatesRouter.use(requireModule("events_quotes"));
 
-templatesRouter.get("/", requirePermission("events.view"), async (req, res) => {
+templatesRouter.get("/", requirePermission("events.edit"), async (req, res) => {
   const { event_type } = req.query as Record<string, string>;
   res.json(await svc.list(req.ctx!, event_type));
 });
 
-templatesRouter.get("/:id", requirePermission("events.view"), async (req, res) => {
+templatesRouter.get("/:id", requirePermission("events.edit"), async (req, res) => {
   const tpl = await svc.get(req.ctx!, req.params.id as string);
   if (!tpl) return res.status(404).json({ error: "Not found" });
   res.json(tpl);

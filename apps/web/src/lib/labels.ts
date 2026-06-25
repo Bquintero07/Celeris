@@ -30,6 +30,10 @@ export const CATEGORY_LABELS: Record<string, string> = {
   permisos: "Permits",
   marketing: "Marketing",
   extras: "Extras",
+  // AI-suggested lines arrive with English categories before being applied/mapped.
+  equipment: "Equipment",
+  crew: "Personnel",
+  supplier: "Extras",
 };
 
 export const APPROVAL_STATUS_LABELS: Record<string, string> = {

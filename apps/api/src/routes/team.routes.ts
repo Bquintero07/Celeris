@@ -29,7 +29,9 @@ teamRouter.get("/", async (req, res) => {
 teamRouter.post("/roles", async (req, res) => {
   const orgId = req.ctx?.orgId;
   if (!orgId) return res.status(403).json({ error: "No organization" });
-  if (!req.ctx?.roles.includes("admin")) return res.status(403).json({ error: "Admin only" });
+  if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {
+    return res.status(403).json({ error: "Admin only" });
+  }
 
   const { user_id, role, action } = req.body as {
     user_id: string; role: string; action: "add" | "remove";
@@ -55,6 +57,9 @@ teamRouter.post("/roles", async (req, res) => {
 teamRouter.get("/join-code", async (req, res) => {
   const orgId = req.ctx?.orgId;
   if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {
+    return res.status(403).json({ error: "Admin only" });
+  }
 
   const rows = await prisma.$queryRaw<{ join_code: string; name: string }[]>`
     SELECT join_code, name FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1

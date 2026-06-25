@@ -88,7 +88,7 @@ export function EventDetail() {
   const [approvalNote, setApprovalNote]     = useState("");
 
   useEffect(() => {
-    if (data?.event && !form) setForm({ ...data.event });
+    if (data && !form) setForm({ ...data });
   }, [data, form]);
 
   // Approval mutations
@@ -122,7 +122,7 @@ export function EventDetail() {
   const revenue    = Number(form.revenue || 0);
   const margin     = revenue - totalCost;
   const marginPct  = revenue > 0 ? (margin / revenue) * 100 : 0;
-  const approvalStatus = data.event?.approval_status ?? "draft";
+  const approvalStatus = data.approval_status ?? "draft";
 
   const saveHeader = async () => {
     await api.events.update(id!, {
