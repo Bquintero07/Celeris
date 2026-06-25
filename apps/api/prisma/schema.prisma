@@ -1,0 +1,218 @@
+// Schema reconstructed from supabase/migrations — source of truth is SQL files.
+// Do NOT use Prisma Migrate. All queries use prisma.$queryRaw with explicit public.* references.
+generator client {
+  provider      = "prisma-client-js"
+  // "native" covers local dev; debian-openssl-3.0.x covers the node:20-slim (Debian Bookworm) Docker runtime.
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Tables (documentation only — all access via $queryRaw) ──────────────────
+
+/// Tenants. status and enabled_modules added by migration 20260615.
+model organizations {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  slug            String?  @unique
+  logo_url        String?
+  primary_color   String   @default("#7C5CFF")
+  accent_color    String   @default("#22D3EE")
+  status          String   @default("pending")
+  enabled_modules String[]
+  created_by      String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("organizations")
+}
+
+/// Auth user extended info.
+model profiles {
+  id              String   @id @db.Uuid
+  full_name       String?
+  avatar_url      String?
+  email           String?
+  organization_id String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("profiles")
+}
+
+/// RBAC roles. organization_id scopes non-super_admin roles. super_admin has no org.
+model user_roles {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  role            String   // app_role enum: admin|comercial|logistica|personal|viewer|contable|super_admin
+  organization_id String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([user_id, role])
+  @@map("user_roles")
+}
+
+model events {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  event_type      String   // event_type enum
+  status          String   @default("borrador") // event_status enum
+  description     String?
+  location        String?
+  start_date      DateTime? @db.Timestamptz(6)
+  end_date        DateTime? @db.Timestamptz(6)
+  attendees       Int?     @default(0)
+  budget          Decimal? @default(0) @db.Decimal(20, 2)
+  revenue         Decimal? @default(0) @db.Decimal(20, 2)
+  ai_prompt       String?
+  ai_summary      String?
+  approval_status String   @default("draft") // draft|review|approved|sent|rejected (added migration 20260620)
+  client_id       String?  @db.Uuid // references clients.id (added migration 20260620)
+  organization_id String   @db.Uuid
+  created_by      String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("events")
+}
+
+/// total_cost = GENERATED ALWAYS AS (quantity * unit_cost) STORED — never insert or update this column.
+model event_items {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id        String   @db.Uuid
+  category        String   // item_category enum
+  name            String
+  description     String?
+  quantity        Decimal  @default(1) @db.Decimal(14, 2)
+  unit_cost       Decimal  @default(0) @db.Decimal(18, 2)
+  supplier_id     String?  @db.Uuid
+  personnel_id    String?  @db.Uuid
+  equipment_id    String?  @db.Uuid
+  base_cost       Decimal? @db.Decimal(18, 2) // original cost before markup (added migration 20260619)
+  markup_pct      Decimal? @default(0) @db.Decimal(5, 2)  // markup % applied to base_cost
+  notes           String?
+  status          String?  @default("pendiente")
+  organization_id String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("event_items")
+}
+
+model equipment {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  category        String   @default("equipo") // item_category enum
+  quantity        Int      @default(1)
+  unit_cost       Decimal  @default(0) @db.Decimal(10, 2)
+  condition       String?  @default("bueno")
+  location        String?
+  notes           String?
+  organization_id String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("equipment")
+}
+
+model suppliers {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  category        String
+  type            String   @default("externo") // supplier_type enum: interno|externo
+  contact_name    String?
+  email           String?
+  phone           String?
+  website         String?
+  notes           String?
+  rating          Decimal? @db.Decimal(4, 2)
+  created_by      String?  @db.Uuid
+  organization_id String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("suppliers")
+}
+
+model personnel {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name       String
+  role            String
+  hourly_rate     Decimal  @default(0) @db.Decimal(18, 2)
+  email           String?
+  phone           String?
+  skills          String[]
+  available       Boolean  @default(true)
+  notes           String?
+  user_id         String?  @db.Uuid
+  organization_id String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("personnel")
+}
+
+/// Billing parties. Added migration 20260620.
+model clients {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  contact_name    String?
+  email           String?
+  phone           String?
+  address         String?
+  tax_id          String?  // NIT / RUT for billing
+  notes           String?
+  organization_id String   @db.Uuid
+  created_by      String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("clients")
+}
+
+/// Reusable line-item sets per event type. Added migration 20260620.
+model event_templates {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  event_type      String   // event_type enum
+  description     String?
+  organization_id String   @db.Uuid
+  created_by      String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("event_templates")
+}
+
+/// Line items belonging to an event_templates row. Added migration 20260620.
+model template_items {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  template_id String   @db.Uuid
+  category    String   // item_category enum
+  name        String
+  quantity    Decimal  @default(1) @db.Decimal(14, 2)
+  unit_cost   Decimal  @default(0) @db.Decimal(18, 2)
+  markup_pct  Decimal  @default(0) @db.Decimal(5, 2)
+  notes       String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("template_items")
+}
+
+/// Append-only audit trail for the events approval flow. Added migration 20260620. Never update/delete.
+model approval_log {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id        String   @db.Uuid
+  organization_id String   @db.Uuid
+  from_status     String
+  to_status       String
+  actor_id        String   @db.Uuid
+  note            String?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("approval_log")
+}

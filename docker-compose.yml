@@ -1,0 +1,17 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    ports: ["3000:3000"]
+    depends_on: [agent]
+    environment:
+      NODE_ENV: production
+
+  agent:
+    build: ./agent
+    env_file: .env
+    ports: ["8000:8000"]
+    environment:
+      PYTHONUNBUFFERED: "1"

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.current_org_id() FROM authenticated;
