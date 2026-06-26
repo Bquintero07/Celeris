@@ -18,6 +18,7 @@ import { Clients } from "./pages/Clients";
 import { Analytics } from "./pages/Analytics";
 import { Billing } from "./pages/Billing";
 import { Chat } from "./pages/Chat";
+import { Documents } from "./pages/Documents";
 
 export const router = createBrowserRouter([
   { path: "/", element: <Landing /> },
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
           { path: "/brand-settings", element: <BrandSettings /> },
           { path: "/admin", element: <Admin /> },
           { path: "/chat", element: <Chat /> },
+          { path: "/documents", element: <Documents /> },
         ],
       },
     ],

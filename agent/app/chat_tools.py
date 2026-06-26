@@ -4,6 +4,10 @@ import decimal
 import psycopg2.extras
 
 from .db import get_connection
+from .openai_client import client as openai_client
+
+EMBED_MODEL = "text-embedding-3-small"
+EMBED_DIMS  = 512
 
 TOOLS = [
     {
@@ -52,6 +56,21 @@ TOOLS = [
             "name": "get_financial_summary",
             "description": "Get revenue, cost, and margin totals across approved/sent events.",
             "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_documents",
+            "description": "Search the organization's knowledge base (uploaded documents) for relevant information.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "The question or topic to search for"},
+                    "limit": {"type": "integer", "default": 5, "description": "Number of results to return"},
+                },
+                "required": ["query"],
+            },
         },
     },
     {
@@ -154,6 +173,27 @@ def execute_tool(name: str, args: dict, org_id: str) -> dict:
                 row = _row(dict(cur.fetchone()))
                 row["total_margin"] = row["total_revenue"] - row["total_cost"]
                 return row
+
+            elif name == "search_documents":
+                limit = min(int(args.get("limit", 5)), 10)
+                embedding = openai_client.embeddings.create(
+                    model=EMBED_MODEL,
+                    input=args["query"],
+                    dimensions=EMBED_DIMS,
+                ).data[0].embedding
+                vec_str = "[" + ",".join(str(x) for x in embedding) + "]"
+                cur.execute(
+                    """SELECT content, metadata->>'name' AS source
+                       FROM public.documents
+                       WHERE metadata->>'org_id' = %s
+                       ORDER BY embedding <=> %s::vector
+                       LIMIT %s""",
+                    (org_id, vec_str, limit),
+                )
+                rows = cur.fetchall()
+                if not rows:
+                    return {"results": [], "message": "No documents found in the knowledge base."}
+                return {"results": [{"content": r["content"], "source": r["source"]} for r in rows]}
 
             elif name == "search_events":
                 cur.execute(

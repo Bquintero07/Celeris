@@ -22,6 +22,7 @@ import { availabilityRouter } from "./routes/availability.routes.js";
 import { analyticsRouter }    from "./routes/analytics.routes.js";
 import { billingRouter }      from "./routes/billing.routes.js";
 import { templatesRouter }    from "./routes/templates.routes.js";
+import { documentsRouter }   from "./routes/documents.routes.js";
 
 const app = express();
 const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",");
@@ -66,6 +67,7 @@ app.use("/api/billing",      billingRouter);
 app.use("/api/templates",    templatesRouter);
 app.use("/api/super",        sensitiveLimiter, superRouter);
 app.use("/api/ai",           aiRouter);
+app.use("/api/documents",    documentsRouter);
 
 const port = Number(process.env.PORT ?? 3000);
 app.listen(port, () => console.log(`API listening on :${port}`));

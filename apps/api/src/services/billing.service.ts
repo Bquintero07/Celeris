@@ -30,10 +30,6 @@ export async function generateInvoice(
   `;
   const event = events[0];
   if (!event) throw Object.assign(new Error("Event not found"), { status: 404 });
-  if (event.approval_status !== "approved" && event.approval_status !== "sent") {
-    throw Object.assign(new Error("Event must be approved before generating an invoice"), { status: 422 });
-  }
-
   // Fetch org branding
   const orgs = await prisma.$queryRaw<any[]>`
     SELECT name, primary_color, accent_color, logo_url FROM public.organizations

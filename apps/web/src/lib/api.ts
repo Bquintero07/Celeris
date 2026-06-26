@@ -19,7 +19,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}/api${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(!(init?.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(orgSlug ? { "X-Org-Slug": orgSlug } : {}),
       ...(init?.headers ?? {}),
@@ -204,6 +204,19 @@ export const api = {
     reject:  (eventId: string, note?: string) =>
       request<any>(`/events/${eventId}/reject`,  { method: "POST", body: JSON.stringify({ note }) }),
     log:     (eventId: string) => request<any[]>(`/events/${eventId}/approval-log`),
+  },
+
+  documents: {
+    list: () => request<any[]>("/documents"),
+    upload: (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      return request<{ ok: boolean; name: string; file_type: string }>("/documents/upload", {
+        method: "POST",
+        body: form,
+      });
+    },
+    delete: (id: string) => request<void>(`/documents/${id}`, { method: "DELETE" }),
   },
 
   ai: {

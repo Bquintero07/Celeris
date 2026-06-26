@@ -92,12 +92,15 @@ pnpm dev:web   # web still runs outside Docker
 | `SUPABASE_ANON_KEY` / `VITE_SUPABASE_ANON_KEY` | web | Supabase public anon key (auth/storage only) |
 | `SUPABASE_JWT_SECRET` | api | Verifies incoming Supabase JWTs |
 | `DATABASE_URL` | api | Postgres connection (pooled, transaction mode) |
-| `DIRECT_URL` | api | Postgres connection (direct, for migrations/introspection) |
+| `DIRECT_URL` | api, db:reset | Postgres direct connection — used by migrations and `pnpm db:reset` |
 | `AI_SERVICE_URL` | api | Base URL of the agent service |
 | `AGENT_SHARED_SECRET` | api, agent | Mutual auth between the API and the agent |
 | `CORS_ORIGIN` | api | Comma-separated list of allowed frontend origins |
-| `OPENAI_API_KEY` | agent | OpenAI API key used for quote suggestions |
+| `OPENAI_API_KEY` | agent | OpenAI API key for quote suggestions and document embeddings |
 | `VITE_API_URL` | web | Base URL of the API |
+| `N8N_WEBHOOK_URL` | api | n8n webhook URL (production) for RAG document ingestion |
+| `N8N_WEBHOOK_URL_TEST` | api | n8n webhook URL (test) for RAG document ingestion |
+| `N8N_WEBHOOK_SECRET` | api | Shared secret for n8n webhook header authentication |
 
 See `docs/DEPLOY.md` for where to find each Supabase value and how to set these per environment.
 
@@ -109,14 +112,37 @@ See `docs/DEPLOY.md` for where to find each Supabase value and how to set these 
 | `pnpm build` | Build all workspace packages |
 | `pnpm test` | Run the API test suite (Vitest) |
 | `pnpm lint` | Type-check all workspace packages |
+| `pnpm db:reset` | Drop and recreate the DB from all migrations in `supabase/migrations/` |
 | `pnpm seed` | Populate two demo tenants (requires `.env.seed`, see below) |
+| `pnpm --filter @celeris/api prisma:pull` | Sync `schema.prisma` with the current DB state |
 | `pnpm --filter @celeris/api prisma:generate` | Regenerate the Prisma client after a schema change |
 
 ## Database & Migrations
 
-The SQL files in `supabase/migrations/` are the single source of truth for the schema — **never** run `prisma migrate`. After applying a new migration (`supabase db push`), update `apps/api/prisma/schema.prisma` by hand to match (it's documentation-as-code, not introspected) and run `prisma generate`.
+The SQL files in `supabase/migrations/` are the single source of truth for the schema — **never** run `prisma migrate`.
 
-To seed two demo tenants with sample inventory, events, and templates:
+### Reset and recreate the database from scratch
+
+```bash
+pnpm db:reset   # drops the public schema, recreates it, and runs all migrations in order
+pnpm seed       # loads two demo tenants with sample data (requires .env.seed — see below)
+```
+
+`pnpm db:reset` uses `DIRECT_URL` from `.env` to connect directly to Postgres via `psql`. After running it, regenerate the Prisma client:
+
+```bash
+pnpm --filter @celeris/api prisma:pull      # sync schema.prisma with the DB
+pnpm --filter @celeris/api prisma:generate  # regenerate the Prisma client
+```
+
+### Add a new migration
+
+1. Create a new `.sql` file in `supabase/migrations/` with a timestamp prefix (e.g. `20260701_my_change.sql`)
+2. Apply it: `PGPASSWORD='...' psql "$DIRECT_URL" -f supabase/migrations/20260701_my_change.sql`
+3. Run `prisma:pull` + `prisma:generate` to keep the Prisma client in sync
+
+### Seed demo data
+
 ```bash
 echo "SUPABASE_URL=...\nSUPABASE_SERVICE_ROLE_KEY=..." > .env.seed
 pnpm seed
