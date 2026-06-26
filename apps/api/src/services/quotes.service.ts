@@ -1,5 +1,6 @@
 import type { AuthContext, QuoteSuggestLine, QuoteSuggestResponse } from "@celeris/shared";
 import { prisma } from "../lib/prisma.js";
+import { getAgentConfig, agentOverrides } from "../lib/agentConfig.js";
 
 // The Python agent speaks English categories (equipment/crew/supplier); the
 // public.item_category enum is Spanish. "supplier" has no direct match — falls
@@ -124,13 +125,14 @@ export async function aiSuggest(
     })),
   };
 
+  const overrides = agentOverrides(await getAgentConfig(), "quote");
   const resp = await fetch(`${aiUrl}/quote/suggest`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.AGENT_SHARED_SECRET ?? ""}`,
     },
-    body: JSON.stringify(agentPayload),
+    body: JSON.stringify({ ...agentPayload, ...overrides }),
   });
 
   if (!resp.ok) {

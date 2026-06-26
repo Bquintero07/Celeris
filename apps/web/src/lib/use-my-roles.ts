@@ -88,7 +88,8 @@ export function canSeeNav(
   roles: AppRole[],
   enabledModules?: string[],
 ): boolean {
-  if (roles.includes("super_admin")) return true;
+  // super_admin uses the dedicated operator console (/admin), not the tenant nav,
+  // so it gets no blanket access here — it's gated by its actual tenant roles (usually none).
 
   // Module gate: if a module is required and not in the org's enabled list, hide it
   const requiredModule = NAV_MODULE[url];

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireModule } from "../middleware/module.js";
 import { requirePermission } from "../middleware/rbac.js";
 import { validate } from "../lib/validate.js";
+import { getAgentConfig, agentOverrides } from "../lib/agentConfig.js";
 
 export const aiRouter = Router();
 aiRouter.use(requireModule("ai_assistant"));
@@ -32,11 +33,12 @@ const agentHeaders = () => ({
 
 // POST /api/ai/generate — proxy to the agent's full new-event plan generator.
 aiRouter.post("/generate", validate(generateSchema), async (req, res) => {
+  const overrides = agentOverrides(await getAgentConfig(), "plan");
   try {
     const upstream = await fetch(`${agentUrl()}/event/plan`, {
       method: "POST",
       headers: agentHeaders(),
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({ ...req.body, ...overrides }),
     });
     if (!upstream.ok) return res.status(upstream.status).json({ error: await upstream.text() });
     res.json(await upstream.json());

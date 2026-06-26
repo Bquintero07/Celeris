@@ -24,7 +24,15 @@ class InventoryItem(BaseModel):
     available: int
 
 
-class QuoteRequest(BaseModel):
+class AgentOverrides(BaseModel):
+    # Optional operator-tuned settings forwarded by the Node API.
+    model: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
+    system_prompt: str | None = None
+
+
+class QuoteRequest(AgentOverrides):
     eventType: str
     description: str
     inventory: list[InventoryItem] = []
@@ -48,7 +56,7 @@ class QuoteResponse(BaseModel):
     notes: list[str] = []
 
 
-class EventPlanRequest(BaseModel):
+class EventPlanRequest(AgentOverrides):
     prompt: str
     template: str | None = None
     currency: str = "COP"

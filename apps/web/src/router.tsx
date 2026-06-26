@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
+import { AdminLayout } from "./components/AdminLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Landing } from "./pages/Landing";
 import { Auth } from "./pages/Auth";
@@ -10,7 +11,11 @@ import { Personnel } from "./pages/Personnel";
 import { Team } from "./pages/Team";
 import { BrandSettings } from "./pages/BrandSettings";
 import { Onboarding } from "./pages/Onboarding";
-import { Admin } from "./pages/Admin";
+import { AdminOrgs } from "./pages/admin/Orgs";
+import { AdminOrgDetail } from "./pages/admin/OrgDetail";
+import { AdminUsers } from "./pages/admin/Users";
+import { AdminAgent } from "./pages/admin/Agent";
+import { AdminProfile } from "./pages/admin/Profile";
 import { EventsList } from "./pages/events/EventsList";
 import { NewEvent } from "./pages/events/NewEvent";
 import { EventDetail } from "./pages/events/EventDetail";
@@ -42,9 +47,18 @@ export const router = createBrowserRouter([
           { path: "/billing",   element: <Billing /> },
           { path: "/team", element: <Team /> },
           { path: "/brand-settings", element: <BrandSettings /> },
-          { path: "/admin", element: <Admin /> },
           { path: "/chat", element: <Chat /> },
           { path: "/documents", element: <Documents /> },
+        ],
+      },
+      {
+        element: <AdminLayout />,
+        children: [
+          { path: "/admin", element: <AdminOrgs /> },
+          { path: "/admin/orgs/:id", element: <AdminOrgDetail /> },
+          { path: "/admin/users", element: <AdminUsers /> },
+          { path: "/admin/agent", element: <AdminAgent /> },
+          { path: "/admin/profile", element: <AdminProfile /> },
         ],
       },
     ],

@@ -25,7 +25,8 @@ import { templatesRouter }    from "./routes/templates.routes.js";
 import { documentsRouter }   from "./routes/documents.routes.js";
 
 const app = express();
-const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",");
+// ponytail: strip trailing slash — browsers never send it in Origin, so a slash in CORS_ORIGIN would never match
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",").map((o) => o.trim().replace(/\/+$/, ""));
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: "10mb" }));
@@ -65,7 +66,10 @@ app.use("/api/availability", availabilityRouter);
 app.use("/api/analytics",    analyticsRouter);
 app.use("/api/billing",      billingRouter);
 app.use("/api/templates",    templatesRouter);
-app.use("/api/super",        sensitiveLimiter, superRouter);
+// Note: super routes are gated by requireSuper + the global apiLimiter (300/15min).
+// We deliberately do NOT use sensitiveLimiter here — the operator console makes many
+// legitimate reads/flag-toggles and 20/15min throttles normal use.
+app.use("/api/super",        superRouter);
 app.use("/api/ai",           aiRouter);
 app.use("/api/documents",    documentsRouter);
 

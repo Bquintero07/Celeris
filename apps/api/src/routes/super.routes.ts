@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { genJoinCode } from "../lib/codes.js";
 import { validate, validateUuidParams, OrgStatus } from "../lib/validate.js";
+import { createAuthUser, setUserPassword, deleteAuthUser } from "../lib/supabaseAdmin.js";
+import { getAgentConfig } from "../lib/agentConfig.js";
 
 export const superRouter = Router();
 
@@ -46,6 +48,26 @@ const assignSchema = z.object({
 const grantSchema = z.object({
   user_id: z.string().uuid(),
   grant:   z.boolean(),
+});
+
+const createUserSchema = z.object({
+  email:           z.string().email(),
+  password:        z.string().min(6),
+  full_name:       z.string().min(1).optional(),
+  organization_id: z.string().uuid().optional(),
+  makeAdmin:       z.boolean().optional(),
+});
+
+const resetPwSchema = z.object({
+  password: z.string().min(6),
+});
+
+const agentConfigSchema = z.object({
+  model:               z.string().min(1),
+  temperature:         z.number().min(0).max(2),
+  max_tokens:          z.number().int().positive().nullable().optional(),
+  quote_system_prompt: z.string().nullable().optional(),
+  plan_system_prompt:  z.string().nullable().optional(),
 });
 
 // GET /api/super/check
@@ -254,4 +276,116 @@ superRouter.post("/grant", requireSuper, validate(grantSchema), async (req, res)
 superRouter.delete("/orgs/:id", requireSuper, validateUuidParams("id"), async (req, res) => {
   await prisma.$executeRaw`DELETE FROM public.organizations WHERE id = ${req.params.id}::uuid`;
   res.status(204).end();
+});
+
+// GET /api/super/orgs/:id/detail — read-only diagnostics: members + data counts
+superRouter.get("/orgs/:id/detail", requireSuper, validateUuidParams("id"), async (req, res) => {
+  const id = req.params.id;
+  const orgRows = await prisma.$queryRaw<any[]>`
+    SELECT id, name, slug, join_code, primary_color, accent_color, logo_url,
+           created_at, COALESCE(status, 'active') AS status,
+           COALESCE(enabled_modules, '{}') AS enabled_modules
+    FROM public.organizations WHERE id = ${id}::uuid
+  `;
+  if (!orgRows[0]) return res.status(404).json({ error: "Not found" });
+
+  const members = await prisma.$queryRaw<any[]>`
+    SELECT p.id, p.full_name, p.email, p.avatar_url,
+           COALESCE(array_agg(ur.role::text) FILTER (WHERE ur.role IS NOT NULL), '{}') AS roles
+    FROM public.profiles p
+    LEFT JOIN public.user_roles ur ON ur.user_id = p.id AND ur.organization_id = ${id}::uuid
+    WHERE p.organization_id = ${id}::uuid
+    GROUP BY p.id, p.full_name, p.email, p.avatar_url
+    ORDER BY p.full_name
+  `;
+
+  const counts = await prisma.$queryRaw<any[]>`
+    SELECT
+      (SELECT COUNT(*)::int FROM public.events    WHERE organization_id = ${id}::uuid) AS events,
+      (SELECT COUNT(*)::int FROM public.equipment WHERE organization_id = ${id}::uuid) AS equipment,
+      (SELECT COUNT(*)::int FROM public.personnel WHERE organization_id = ${id}::uuid) AS personnel,
+      (SELECT COUNT(*)::int FROM public.suppliers WHERE organization_id = ${id}::uuid) AS suppliers,
+      (SELECT COUNT(*)::int FROM public.clients   WHERE organization_id = ${id}::uuid) AS clients
+  `;
+
+  res.json({ org: orgRows[0], members, counts: counts[0] ?? {} });
+});
+
+// POST /api/super/users — create an auth user (optionally attach to an org)
+superRouter.post("/users", requireSuper, validate(createUserSchema), async (req, res) => {
+  const { email, password, full_name, organization_id, makeAdmin } = req.body as z.infer<typeof createUserSchema>;
+  let user;
+  try {
+    user = await createAuthUser({ email, password, full_name });
+  } catch (e: any) {
+    return res.status(e.status ?? 500).json({ error: e.message ?? "Could not create user" });
+  }
+  if (organization_id) {
+    await prisma.$transaction([
+      prisma.$executeRaw`
+        UPDATE public.profiles SET organization_id = ${organization_id}::uuid WHERE id = ${user.id}::uuid
+      `,
+      prisma.$executeRaw`
+        INSERT INTO public.user_roles (user_id, role, organization_id)
+        VALUES (${user.id}::uuid, ${makeAdmin ? "admin" : "viewer"}::public.app_role, ${organization_id}::uuid)
+        ON CONFLICT DO NOTHING
+      `,
+    ]);
+  }
+  res.status(201).json({ id: user.id, email: user.email });
+});
+
+// POST /api/super/users/:id/reset-password
+superRouter.post("/users/:id/reset-password", requireSuper, validateUuidParams("id"), validate(resetPwSchema), async (req, res) => {
+  try {
+    await setUserPassword(String(req.params.id), (req.body as z.infer<typeof resetPwSchema>).password);
+  } catch (e: any) {
+    return res.status(e.status ?? 500).json({ error: e.message ?? "Could not reset password" });
+  }
+  res.status(204).end();
+});
+
+// DELETE /api/super/users/:id — removes auth user (profiles/user_roles cascade)
+superRouter.delete("/users/:id", requireSuper, validateUuidParams("id"), async (req, res) => {
+  if (req.params.id === req.ctx!.userId) {
+    return res.status(400).json({ error: "You cannot delete your own account" });
+  }
+  try {
+    await deleteAuthUser(String(req.params.id));
+  } catch (e: any) {
+    return res.status(e.status ?? 500).json({ error: e.message ?? "Could not delete user" });
+  }
+  res.status(204).end();
+});
+
+// GET /api/super/agent/config
+superRouter.get("/agent/config", requireSuper, async (_req, res) => {
+  res.json(await getAgentConfig());
+});
+
+// PUT /api/super/agent/config
+superRouter.put("/agent/config", requireSuper, validate(agentConfigSchema), async (req, res) => {
+  const c = req.body as z.infer<typeof agentConfigSchema>;
+  await prisma.$executeRaw`
+    INSERT INTO public.agent_config
+      (id, model, temperature, max_tokens, quote_system_prompt, plan_system_prompt, updated_at, updated_by)
+    VALUES (1, ${c.model}, ${c.temperature}, ${c.max_tokens ?? null},
+            ${c.quote_system_prompt ?? null}, ${c.plan_system_prompt ?? null}, now(), ${req.ctx!.userId}::uuid)
+    ON CONFLICT (id) DO UPDATE SET
+      model = EXCLUDED.model, temperature = EXCLUDED.temperature, max_tokens = EXCLUDED.max_tokens,
+      quote_system_prompt = EXCLUDED.quote_system_prompt, plan_system_prompt = EXCLUDED.plan_system_prompt,
+      updated_at = now(), updated_by = EXCLUDED.updated_by
+  `;
+  res.json(await getAgentConfig());
+});
+
+// GET /api/super/agent/health — proxy the Python agent's health probe
+superRouter.get("/agent/health", requireSuper, async (_req, res) => {
+  const agentUrl = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
+  try {
+    const r = await fetch(`${agentUrl}/health`, { signal: AbortSignal.timeout(4000) });
+    res.json({ ok: r.ok });
+  } catch {
+    res.json({ ok: false });
+  }
 });
