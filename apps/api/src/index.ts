@@ -24,7 +24,8 @@ import { billingRouter }      from "./routes/billing.routes.js";
 import { templatesRouter }    from "./routes/templates.routes.js";
 
 const app = express();
-const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",");
+// ponytail: strip trailing slash — browsers never send it in Origin, so a slash in CORS_ORIGIN would never match
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",").map((o) => o.trim().replace(/\/+$/, ""));
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: "10mb" }));
