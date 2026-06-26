@@ -1,7 +1,18 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
+import { validate } from "../lib/validate.js";
 
 export const orgRouter = Router();
+
+const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "must be a valid hex color (#rrggbb)");
+
+const updateOrgSchema = z.object({
+  name:          z.string().min(1).optional(),
+  primary_color: hexColor.optional().nullable(),
+  accent_color:  hexColor.optional().nullable(),
+  logo_url:      z.string().url().optional().nullable(),
+});
 
 // GET /api/org
 orgRouter.get("/", async (req, res) => {
@@ -19,7 +30,7 @@ orgRouter.get("/", async (req, res) => {
 });
 
 // PATCH /api/org  { name?, primary_color?, accent_color?, logo_url? }
-orgRouter.patch("/", async (req, res) => {
+orgRouter.patch("/", validate(updateOrgSchema), async (req, res) => {
   const orgId = req.ctx?.orgId;
   if (!orgId) return res.status(403).json({ error: "No organization" });
   if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {

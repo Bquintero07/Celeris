@@ -1,6 +1,8 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { genJoinCode } from "../lib/codes.js";
+import { validate, validateUuidParams, OrgStatus } from "../lib/validate.js";
 
 export const superRouter = Router();
 
@@ -9,17 +11,52 @@ function requireSuper(req: any, res: any, next: any) {
   next();
 }
 
+const createOrgSchema = z.object({
+  name:            z.string().min(1, "name is required"),
+  slug:            z.string().regex(/^[a-z0-9-]+$/).optional(),
+  enabled_modules: z.array(z.string()).optional(),
+  status:          OrgStatus.optional(),
+});
+
+const updateOrgSchema = z.object({
+  name:   z.string().min(1).optional(),
+  slug:   z.string().regex(/^[a-z0-9-]+$/).optional(),
+  status: OrgStatus.optional(),
+});
+
+const modulesSchema = z.object({
+  enabled_modules: z.array(z.string()),
+});
+
+const toggleModuleSchema = z.object({
+  module:  z.string().min(1),
+  enabled: z.boolean(),
+});
+
+const statusSchema = z.object({
+  status: OrgStatus,
+});
+
+const assignSchema = z.object({
+  user_id:         z.string().uuid(),
+  organization_id: z.string().uuid(),
+  makeAdmin:       z.boolean().optional(),
+});
+
+const grantSchema = z.object({
+  user_id: z.string().uuid(),
+  grant:   z.boolean(),
+});
+
 // GET /api/super/check
 superRouter.get("/check", (req, res) => {
   res.json(req.ctx?.isSuperAdmin ?? false);
 });
 
-// POST /api/super/bootstrap — make the calling user super admin, but ONLY if no super admin
-// exists yet. Safe for first-time setup; rejected once the system has been bootstrapped.
+// POST /api/super/bootstrap
 superRouter.post("/bootstrap", async (req, res) => {
   const userId = req.ctx!.userId;
   const bootstrapped = await prisma.$transaction(async (tx) => {
-    // Serializes concurrent bootstrap attempts so two requests can't both win the race.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('celeris_super_admin_bootstrap'))`;
     const existing = await tx.$queryRaw<{ count: bigint }[]>`
       SELECT COUNT(*)::bigint AS count FROM public.user_roles WHERE role = 'super_admin'::public.app_role
@@ -36,7 +73,7 @@ superRouter.post("/bootstrap", async (req, res) => {
   res.status(204).end();
 });
 
-// GET /api/super/orgs — list all tenants with member count and enabled modules
+// GET /api/super/orgs
 superRouter.get("/orgs", requireSuper, async (_req, res) => {
   const rows = await prisma.$queryRaw<any[]>`
     SELECT o.id, o.name, o.slug, o.join_code, o.primary_color, o.accent_color,
@@ -51,8 +88,8 @@ superRouter.get("/orgs", requireSuper, async (_req, res) => {
   res.json(rows);
 });
 
-// GET /api/super/orgs/:id — single tenant detail
-superRouter.get("/orgs/:id", requireSuper, async (req, res) => {
+// GET /api/super/orgs/:id
+superRouter.get("/orgs/:id", requireSuper, validateUuidParams("id"), async (req, res) => {
   const rows = await prisma.$queryRaw<any[]>`
     SELECT o.id, o.name, o.slug, o.join_code, o.primary_color, o.accent_color,
            o.logo_url, o.created_at, o.status,
@@ -67,8 +104,8 @@ superRouter.get("/orgs/:id", requireSuper, async (req, res) => {
   res.json(rows[0]);
 });
 
-// POST /api/super/orgs — create tenant { name, slug?, enabled_modules?, status? }
-superRouter.post("/orgs", requireSuper, async (req, res) => {
+// POST /api/super/orgs
+superRouter.post("/orgs", requireSuper, validate(createOrgSchema), async (req, res) => {
   const { name, slug, enabled_modules, status } = req.body as {
     name: string; slug?: string; enabled_modules?: string[]; status?: string;
   };
@@ -89,8 +126,8 @@ superRouter.post("/orgs", requireSuper, async (req, res) => {
   res.status(201).json(rows[0]);
 });
 
-// PATCH /api/super/orgs/:id — update tenant name, slug, status
-superRouter.patch("/orgs/:id", requireSuper, async (req, res) => {
+// PATCH /api/super/orgs/:id
+superRouter.patch("/orgs/:id", requireSuper, validateUuidParams("id"), validate(updateOrgSchema), async (req, res) => {
   const { name, slug, status } = req.body as {
     name?: string; slug?: string; status?: string;
   };
@@ -106,10 +143,9 @@ superRouter.patch("/orgs/:id", requireSuper, async (req, res) => {
   res.json(rows[0]);
 });
 
-// PATCH /api/super/orgs/:id/modules — set the full list of enabled modules for a tenant
-// Body: { enabled_modules: string[] }
-superRouter.patch("/orgs/:id/modules", requireSuper, async (req, res) => {
-  const modules: string[] = req.body.enabled_modules ?? [];
+// PATCH /api/super/orgs/:id/modules
+superRouter.patch("/orgs/:id/modules", requireSuper, validateUuidParams("id"), validate(modulesSchema), async (req, res) => {
+  const modules: string[] = req.body.enabled_modules;
   const rows = await prisma.$queryRaw<any[]>`
     UPDATE public.organizations
     SET enabled_modules = ${modules}::text[]
@@ -120,9 +156,8 @@ superRouter.patch("/orgs/:id/modules", requireSuper, async (req, res) => {
   res.json(rows[0]);
 });
 
-// PATCH /api/super/orgs/:id/modules/toggle — toggle a single module on or off
-// Body: { module: string; enabled: boolean }
-superRouter.patch("/orgs/:id/modules/toggle", requireSuper, async (req, res) => {
+// PATCH /api/super/orgs/:id/modules/toggle
+superRouter.patch("/orgs/:id/modules/toggle", requireSuper, validateUuidParams("id"), validate(toggleModuleSchema), async (req, res) => {
   const { module, enabled } = req.body as { module: string; enabled: boolean };
   let rows: any[];
   if (enabled) {
@@ -153,9 +188,8 @@ superRouter.patch("/orgs/:id/modules/toggle", requireSuper, async (req, res) => 
   res.json(rows[0]);
 });
 
-// PATCH /api/super/orgs/:id/status — activate or deactivate a tenant
-// Body: { status: 'active' | 'inactive' | 'suspended' }
-superRouter.patch("/orgs/:id/status", requireSuper, async (req, res) => {
+// PATCH /api/super/orgs/:id/status
+superRouter.patch("/orgs/:id/status", requireSuper, validateUuidParams("id"), validate(statusSchema), async (req, res) => {
   const { status } = req.body as { status: string };
   const rows = await prisma.$queryRaw<any[]>`
     UPDATE public.organizations SET status = ${status}
@@ -180,8 +214,8 @@ superRouter.get("/users", requireSuper, async (_req, res) => {
   res.json(rows);
 });
 
-// POST /api/super/assign — move user into an org { user_id, organization_id, makeAdmin? }
-superRouter.post("/assign", requireSuper, async (req, res) => {
+// POST /api/super/assign
+superRouter.post("/assign", requireSuper, validate(assignSchema), async (req, res) => {
   const { user_id, organization_id, makeAdmin } = req.body;
   const role = makeAdmin ? "admin" : "viewer";
 
@@ -198,8 +232,8 @@ superRouter.post("/assign", requireSuper, async (req, res) => {
   res.status(204).end();
 });
 
-// POST /api/super/grant — grant or revoke super_admin { user_id, grant: boolean }
-superRouter.post("/grant", requireSuper, async (req, res) => {
+// POST /api/super/grant
+superRouter.post("/grant", requireSuper, validate(grantSchema), async (req, res) => {
   const { user_id, grant } = req.body as { user_id: string; grant: boolean };
   if (grant) {
     await prisma.$executeRaw`
@@ -216,8 +250,8 @@ superRouter.post("/grant", requireSuper, async (req, res) => {
   res.status(204).end();
 });
 
-// DELETE /api/super/orgs/:id — permanently delete a tenant and all its data
-superRouter.delete("/orgs/:id", requireSuper, async (req, res) => {
+// DELETE /api/super/orgs/:id
+superRouter.delete("/orgs/:id", requireSuper, validateUuidParams("id"), async (req, res) => {
   await prisma.$executeRaw`DELETE FROM public.organizations WHERE id = ${req.params.id}::uuid`;
   res.status(204).end();
 });

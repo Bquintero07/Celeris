@@ -12,8 +12,9 @@ export async function list(ctx: AuthContext) {
 }
 
 export async function upsert(ctx: AuthContext, data: {
-  id?: string; full_name?: string; role?: string; skills?: string[];
-  available?: boolean; hourly_rate?: number; email?: string; phone?: string; notes?: string;
+  id?: string; full_name?: string; role?: string | null; skills?: string[];
+  available?: boolean; hourly_rate?: number | null; email?: string | null;
+  phone?: string | null; notes?: string | null;
 }) {
   const { id, full_name, role, skills, available, hourly_rate, email, phone, notes } = data;
   const skillsArr = Array.isArray(skills) ? skills : [];

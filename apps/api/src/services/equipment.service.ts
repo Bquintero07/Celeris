@@ -12,8 +12,8 @@ export async function list(ctx: AuthContext) {
 }
 
 export async function upsert(ctx: AuthContext, data: {
-  id?: string; name?: string; category?: string; quantity?: number;
-  unit_cost?: number; condition?: string; location?: string; notes?: string;
+  id?: string; name?: string; category?: string | null; quantity?: number;
+  unit_cost?: number; condition?: string | null; location?: string | null; notes?: string | null;
 }) {
   const { id, name, category, quantity, unit_cost, condition, location, notes } = data;
 

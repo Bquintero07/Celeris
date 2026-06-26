@@ -1,7 +1,15 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
+import { validate, validateUuidParams, AppRole } from "../lib/validate.js";
 
 export const teamRouter = Router();
+
+const rolesSchema = z.object({
+  user_id: z.string().uuid(),
+  role:    AppRole,
+  action:  z.enum(["add", "remove"]),
+});
 
 // GET /api/team  — users in the org with their roles
 teamRouter.get("/", async (req, res) => {
@@ -26,7 +34,7 @@ teamRouter.get("/", async (req, res) => {
 });
 
 // POST /api/team/roles  { user_id, role, action: 'add'|'remove' }
-teamRouter.post("/roles", async (req, res) => {
+teamRouter.post("/roles", validate(rolesSchema), async (req, res) => {
   const orgId = req.ctx?.orgId;
   if (!orgId) return res.status(403).json({ error: "No organization" });
   if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {

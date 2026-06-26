@@ -12,9 +12,9 @@ export async function list(ctx: AuthContext) {
 }
 
 export async function upsert(ctx: AuthContext, data: {
-  id?: string; name?: string; category?: string; type?: string;
-  contact_name?: string; email?: string; phone?: string;
-  website?: string; rating?: number; notes?: string;
+  id?: string; name?: string; category?: string | null; type?: string | null;
+  contact_name?: string | null; email?: string | null; phone?: string | null;
+  website?: string | null; rating?: number | null; notes?: string | null;
 }) {
   const { id, name, category, type, contact_name, email, phone, website, rating, notes } = data;
 

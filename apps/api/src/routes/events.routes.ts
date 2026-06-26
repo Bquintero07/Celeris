@@ -1,8 +1,10 @@
 import { Router } from "express";
+import { z } from "zod";
 import { can, type AuthContext } from "@celeris/shared";
 import { requireModule } from "../middleware/module.js";
 import { requirePermission } from "../middleware/rbac.js";
 import { prisma } from "../lib/prisma.js";
+import { validate, validateUuidParams, EventType, EventStatus, ItemCategory } from "../lib/validate.js";
 
 export const eventsRouter = Router();
 eventsRouter.use(requireModule("events_quotes"));
@@ -54,7 +56,7 @@ eventsRouter.get("/", async (req, res) => {
 });
 
 // GET /api/events/:id
-eventsRouter.get("/:id", async (req, res) => {
+eventsRouter.get("/:id", validateUuidParams("id"), async (req, res) => {
   const { orgId } = req.ctx!;
   if (!orgId) return res.status(404).json({ error: "Not found" });
 
@@ -76,8 +78,59 @@ eventsRouter.get("/:id", async (req, res) => {
   res.json({ ...events[0], items });
 });
 
+const createEventSchema = z.object({
+  title:       z.string().min(1, "title is required"),
+  event_type:  EventType.optional(),
+  status:      EventStatus.optional(),
+  start_date:  z.string().datetime({ offset: true }).optional().nullable(),
+  end_date:    z.string().datetime({ offset: true }).optional().nullable(),
+  location:    z.string().optional().nullable(),
+  budget:      z.number().nonnegative().optional().nullable(),
+  revenue:     z.number().nonnegative().optional().nullable(),
+  attendees:   z.number().int().nonnegative().optional().nullable(),
+  description: z.string().optional().nullable(),
+  ai_prompt:   z.string().optional().nullable(),
+  ai_summary:  z.string().optional().nullable(),
+  client_id:   z.string().uuid().optional().nullable(),
+});
+
+const updateEventSchema = createEventSchema.partial().extend({
+  title: z.string().min(1).optional(),
+});
+
+const eventItemSchema = z.object({
+  name:         z.string().min(1, "name is required"),
+  category:     ItemCategory.optional(),
+  description:  z.string().optional().nullable(),
+  quantity:     z.number().int().positive().optional(),
+  unit_cost:    z.number().nonnegative().optional(),
+  equipment_id: z.string().uuid().optional().nullable(),
+  supplier_id:  z.string().uuid().optional().nullable(),
+  personnel_id: z.string().uuid().optional().nullable(),
+  notes:        z.string().optional().nullable(),
+});
+
+const bulkItemsSchema = z.object({
+  items: z.array(eventItemSchema).min(1, "items must be a non-empty array"),
+});
+
+const updateEventItemSchema = z.object({
+  name:        z.string().min(1).optional(),
+  category:    ItemCategory.optional(),
+  quantity:    z.number().int().positive().optional(),
+  unit_cost:   z.number().nonnegative().optional(),
+  description: z.string().optional().nullable(),
+  notes:       z.string().optional().nullable(),
+});
+
+const noteSchema = z.object({ note: z.string().optional() });
+
+const exportSchema = z.object({
+  currency: z.string().length(3).optional(),
+});
+
 // POST /api/events
-eventsRouter.post("/", requirePermission("events.create"), async (req, res) => {
+eventsRouter.post("/", requirePermission("events.create"), validate(createEventSchema), async (req, res) => {
   const { orgId, userId } = req.ctx!;
   const { title, event_type, status, start_date, end_date, location, budget, revenue,
           attendees, description, ai_prompt, ai_summary } = req.body;
@@ -101,7 +154,7 @@ eventsRouter.post("/", requirePermission("events.create"), async (req, res) => {
 });
 
 // PATCH /api/events/:id
-eventsRouter.patch("/:id", requirePermission("events.edit"), async (req, res) => {
+eventsRouter.patch("/:id", validateUuidParams("id"), requirePermission("events.edit"), validate(updateEventSchema), async (req, res) => {
   const { orgId } = req.ctx!;
   const { title, event_type, status, start_date, end_date, location,
           budget, revenue, attendees, description, ai_prompt, ai_summary, client_id } = req.body;
@@ -130,7 +183,7 @@ eventsRouter.patch("/:id", requirePermission("events.edit"), async (req, res) =>
 });
 
 // DELETE /api/events/:id
-eventsRouter.delete("/:id", requirePermission("events.edit"), async (req, res) => {
+eventsRouter.delete("/:id", validateUuidParams("id"), requirePermission("events.edit"), async (req, res) => {
   const { orgId } = req.ctx!;
   await prisma.$executeRaw`
     DELETE FROM public.events WHERE id = ${req.params.id}::uuid AND organization_id = ${orgId}::uuid
@@ -139,7 +192,7 @@ eventsRouter.delete("/:id", requirePermission("events.edit"), async (req, res) =
 });
 
 // POST /api/events/:id/items
-eventsRouter.post("/:id/items", async (req, res) => {
+eventsRouter.post("/:id/items", validateUuidParams("id"), validate(eventItemSchema), async (req, res) => {
   const ctx = req.ctx!;
   const { orgId } = ctx;
   const event = await prisma.$queryRaw<any[]>`
@@ -171,7 +224,7 @@ eventsRouter.post("/:id/items", async (req, res) => {
 });
 
 // POST /api/events/:id/items/bulk
-eventsRouter.post("/:id/items/bulk", async (req, res) => {
+eventsRouter.post("/:id/items/bulk", validateUuidParams("id"), validate(bulkItemsSchema), async (req, res) => {
   const ctx = req.ctx!;
   const { orgId } = ctx;
   const event = await prisma.$queryRaw<any[]>`
@@ -200,7 +253,7 @@ eventsRouter.post("/:id/items/bulk", async (req, res) => {
 });
 
 // PATCH /api/events/items/:itemId
-eventsRouter.patch("/items/:itemId", async (req, res) => {
+eventsRouter.patch("/items/:itemId", validateUuidParams("itemId"), validate(updateEventItemSchema), async (req, res) => {
   const ctx = req.ctx!;
   const { orgId } = ctx;
   const item = await prisma.$queryRaw<any[]>`
@@ -229,7 +282,7 @@ eventsRouter.patch("/items/:itemId", async (req, res) => {
 });
 
 // DELETE /api/events/items/:itemId
-eventsRouter.delete("/items/:itemId", async (req, res) => {
+eventsRouter.delete("/items/:itemId", validateUuidParams("itemId"), async (req, res) => {
   const ctx = req.ctx!;
   const { orgId } = ctx;
   const item = await prisma.$queryRaw<any[]>`
@@ -283,27 +336,27 @@ async function doTransition(
   return res.json({ approval_status: to });
 }
 
-eventsRouter.post("/:id/submit", requirePermission("events.edit"), async (req, res) => {
+eventsRouter.post("/:id/submit", validateUuidParams("id"), requirePermission("events.edit"), validate(noteSchema), async (req, res) => {
   const { orgId, userId } = req.ctx!;
   return doTransition(orgId!, req.params.id as string, userId!, "review", req.body.note, res);
 });
 
-eventsRouter.post("/:id/approve", requirePermission("events.approve"), async (req, res) => {
+eventsRouter.post("/:id/approve", validateUuidParams("id"), requirePermission("events.approve"), validate(noteSchema), async (req, res) => {
   const { orgId, userId } = req.ctx!;
   return doTransition(orgId!, req.params.id as string, userId!, "approved", req.body.note, res);
 });
 
-eventsRouter.post("/:id/send", requirePermission("events.approve"), async (req, res) => {
+eventsRouter.post("/:id/send", validateUuidParams("id"), requirePermission("events.approve"), validate(noteSchema), async (req, res) => {
   const { orgId, userId } = req.ctx!;
   return doTransition(orgId!, req.params.id as string, userId!, "sent", req.body.note, res);
 });
 
-eventsRouter.post("/:id/reject", requirePermission("events.approve"), async (req, res) => {
+eventsRouter.post("/:id/reject", validateUuidParams("id"), requirePermission("events.approve"), validate(noteSchema), async (req, res) => {
   const { orgId, userId } = req.ctx!;
   return doTransition(orgId!, req.params.id as string, userId!, "rejected", req.body.note, res);
 });
 
-eventsRouter.get("/:id/approval-log", requirePermission("events.edit"), async (req, res) => {
+eventsRouter.get("/:id/approval-log", validateUuidParams("id"), requirePermission("events.edit"), async (req, res) => {
   const { orgId } = req.ctx!;
   const rows = await prisma.$queryRaw<any[]>`
     SELECT al.*, pr.full_name AS actor_name
@@ -319,7 +372,7 @@ eventsRouter.get("/:id/approval-log", requirePermission("events.edit"), async (r
 import * as billing from "../services/billing.service.js";
 import ExcelJS from "exceljs";
 
-eventsRouter.post("/:id/export/pdf", requirePermission("quotes.export"), async (req, res) => {
+eventsRouter.post("/:id/export/pdf", validateUuidParams("id"), requirePermission("quotes.export"), validate(exportSchema), async (req, res) => {
   try {
     const result = await billing.generateInvoice(req.ctx!, req.params.id as string, {
       currency: req.body.currency ?? "COP",
@@ -331,7 +384,7 @@ eventsRouter.post("/:id/export/pdf", requirePermission("quotes.export"), async (
   }
 });
 
-eventsRouter.post("/:id/export/excel", requirePermission("quotes.export"), async (req, res) => {
+eventsRouter.post("/:id/export/excel", validateUuidParams("id"), requirePermission("quotes.export"), async (req, res) => {
   const { orgId, isSuperAdmin, roles } = req.ctx!;
   const canSeeMargin = isSuperAdmin || (roles ?? []).includes("admin") || (roles ?? []).includes("contable");
   const eventId = req.params.id as string;
