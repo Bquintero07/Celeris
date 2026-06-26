@@ -221,14 +221,22 @@ export function EventDetail() {
   };
 
   const downloadPdf = async () => {
-    const r = await api.events.exportPdf(id!, currency);
-    if (r.base64) downloadBase64(r.base64, r.filename, "application/pdf");
-    else toast.error("PDF generation failed");
+    try {
+      const r = await api.events.exportPdf(id!, currency);
+      if (r.base64) downloadBase64(r.base64, r.filename, "application/pdf");
+      else toast.error("PDF generation failed");
+    } catch (e: any) {
+      toast.error(e.message ?? "PDF generation failed");
+    }
   };
   const downloadXls = async () => {
-    const r = await api.events.exportExcel(id!, currency);
-    if (r.base64) downloadBase64(r.base64, r.filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    else toast.error("Export failed");
+    try {
+      const r = await api.events.exportExcel(id!, currency);
+      if (r.base64) downloadBase64(r.base64, r.filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      else toast.error("Export failed");
+    } catch (e: any) {
+      toast.error(e.message ?? "Export failed");
+    }
   };
 
   return (

@@ -213,5 +213,7 @@ export const api = {
       currency: string;
       budget_cap: number | null;
     }) => request<any>("/ai/generate", { method: "POST", body: JSON.stringify(data) }),
+    chat: (messages: { role: "user" | "assistant"; content: string }[], currency = "COP") =>
+      request<{ message: string }>("/ai/chat", { method: "POST", body: JSON.stringify({ messages, currency }) }),
   },
 };

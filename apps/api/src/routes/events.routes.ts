@@ -384,23 +384,26 @@ eventsRouter.post("/:id/export/pdf", validateUuidParams("id"), requirePermission
   }
 });
 
-eventsRouter.post("/:id/export/excel", validateUuidParams("id"), requirePermission("quotes.export"), async (req, res) => {
+eventsRouter.post("/:id/export/excel", validateUuidParams("id"), requirePermission("quotes.export"), validate(exportSchema), async (req, res) => {
   const { orgId, isSuperAdmin, roles } = req.ctx!;
   const canSeeMargin = isSuperAdmin || (roles ?? []).includes("admin") || (roles ?? []).includes("contable");
   const eventId = req.params.id as string;
+  const currency = req.body.currency ?? "COP";
 
-  const [events, items] = await Promise.all([
-    prisma.$queryRaw<any[]>`
-      SELECT e.*, c.name AS client_name FROM public.events e
-      LEFT JOIN public.clients c ON c.id = e.client_id
-      WHERE e.id = ${eventId}::uuid AND e.organization_id = ${orgId}::uuid LIMIT 1
-    `,
-    prisma.$queryRaw<any[]>`
-      SELECT category, name, quantity, unit_cost, total_cost, base_cost, markup_pct, notes
-      FROM public.event_items WHERE event_id = ${eventId}::uuid ORDER BY category, name
-    `,
-  ]);
+  const events = await prisma.$queryRaw<any[]>`
+    SELECT e.*, c.name AS client_name FROM public.events e
+    LEFT JOIN public.clients c ON c.id = e.client_id
+    WHERE e.id = ${eventId}::uuid AND e.organization_id = ${orgId}::uuid LIMIT 1
+  `;
   if (!events[0]) return res.status(404).json({ error: "Not found" });
+
+  const items = await prisma.$queryRaw<any[]>`
+    SELECT category, name, quantity, unit_cost, total_cost, base_cost, markup_pct, notes
+    FROM public.event_items WHERE event_id = ${eventId}::uuid ORDER BY category, name
+  `;
+
+  const fmt = (n: number) =>
+    `${currency} ${n.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Quote");
@@ -429,11 +432,11 @@ eventsRouter.post("/:id/export/excel", validateUuidParams("id"), requirePermissi
     ws.addRow({
       ...item,
       quantity:    Number(item.quantity),
-      unit_cost:   Number(item.unit_cost),
-      total_cost:  total,
-      base_cost:   baseCost,
+      unit_cost:   fmt(Number(item.unit_cost)),
+      total_cost:  fmt(total),
+      base_cost:   fmt(baseCost),
       markup_pct:  Number(item.markup_pct ?? 0),
-      margin,
+      margin:      fmt(margin),
       margin_pct:  Number(marginPct.toFixed(2)),
     });
   }

@@ -2,6 +2,21 @@ from typing import Literal
 from pydantic import BaseModel
 
 
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage]
+    org_id: str
+    currency: str = "COP"
+
+
+class ChatResponse(BaseModel):
+    message: str
+
+
 class InventoryItem(BaseModel):
     id: str
     name: str

@@ -1,11 +1,17 @@
+import json
 import os
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 
+from .chat_tools import TOOLS, execute_tool
 from .openai_client import client, MODEL
 from .prompt import build_event_plan_prompt, build_prompt
-from .schemas import EventPlanRequest, EventPlanResponse, QuoteRequest, QuoteResponse
+from .schemas import (
+    ChatRequest, ChatResponse,
+    EventPlanRequest, EventPlanResponse,
+    QuoteRequest, QuoteResponse,
+)
 
 load_dotenv()
 app = FastAPI(title="Celeris AI Agent")
@@ -61,3 +67,51 @@ def plan_event(req: EventPlanRequest) -> EventPlanResponse:
     )
     content = completion.choices[0].message.content or "{}"
     return EventPlanResponse.model_validate_json(content)
+
+
+CHAT_SYSTEM = (
+    "You are a helpful assistant for an events production agency. "
+    "You have access to the organization's data through tools. "
+    "Use them to answer questions about events, clients, budgets, and financials. "
+    "Be concise and respond in the same language the user writes in. "
+    "Format currency values clearly. When listing events or items, use short bullet points."
+)
+
+MAX_TOOL_ROUNDS = 5
+
+
+@app.post(
+    "/chat",
+    response_model=ChatResponse,
+    dependencies=[Depends(require_shared_secret)],
+)
+def chat(req: ChatRequest) -> ChatResponse:
+    """Conversational assistant with SQL tool calling over org data."""
+    messages: list[dict] = [{"role": "system", "content": CHAT_SYSTEM}]
+    messages += [{"role": m.role, "content": m.content} for m in req.messages]
+
+    for _ in range(MAX_TOOL_ROUNDS):
+        response = client.chat.completions.create(
+            model=MODEL,
+            tools=TOOLS,
+            messages=messages,
+        )
+        choice = response.choices[0]
+
+        if choice.finish_reason != "tool_calls":
+            return ChatResponse(message=choice.message.content or "")
+
+        messages.append(choice.message)
+        for call in choice.message.tool_calls:
+            try:
+                args = json.loads(call.function.arguments)
+                result = execute_tool(call.function.name, args, req.org_id)
+            except Exception as exc:
+                result = {"error": str(exc)}
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.id,
+                "content": json.dumps(result),
+            })
+
+    return ChatResponse(message="I'm sorry, I couldn't complete the request.")

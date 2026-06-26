@@ -65,6 +65,7 @@ export const NAV_MODULE: Record<string, ModuleKey | null> = {
   "/team":           null,
   "/brand-settings": "branding",
   "/admin":          null,
+  "/chat":           "ai_assistant",
 };
 
 export const NAV_ACCESS: Record<string, AppRole[]> = {
@@ -79,6 +80,7 @@ export const NAV_ACCESS: Record<string, AppRole[]> = {
   "/team":           ["admin"],
   "/brand-settings": ["admin"],
   "/admin":          ["super_admin"],
+  "/chat":           ["admin"],
 };
 
 export function canSeeNav(

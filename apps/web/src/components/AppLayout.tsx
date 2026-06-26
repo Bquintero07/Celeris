@@ -6,7 +6,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Calendar, Package, Truck, Users, LogOut, Boxes, Settings, ShieldCheck, UserRound, BarChart3, Receipt } from "lucide-react";
+import { LayoutDashboard, Calendar, Package, Truck, Users, LogOut, Boxes, Settings, ShieldCheck, UserRound, BarChart3, Receipt, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CurrencyProvider, CurrencySwitcher } from "@/lib/currency";
@@ -27,6 +27,7 @@ const navItems = [
   { title: "Billing",     url: "/billing",         icon: Receipt },
   { title: "Team",        url: "/team",            icon: Package },
   { title: "Brand",       url: "/brand-settings",  icon: Settings },
+  { title: "AI Chat",     url: "/chat",            icon: MessageSquare },
   { title: "Super Admin", url: "/admin",           icon: ShieldCheck },
 ];
 

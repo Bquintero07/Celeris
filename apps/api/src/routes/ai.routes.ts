@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireModule } from "../middleware/module.js";
+import { requirePermission } from "../middleware/rbac.js";
 import { validate } from "../lib/validate.js";
 
 export const aiRouter = Router();
@@ -13,25 +14,49 @@ const generateSchema = z.object({
   budget_cap: z.number().nonnegative().optional().nullable(),
 });
 
+const chatMessageSchema = z.object({
+  role:    z.enum(["user", "assistant"]),
+  content: z.string().min(1),
+});
+
+const chatSchema = z.object({
+  messages: z.array(chatMessageSchema).min(1),
+  currency: z.string().length(3).optional(),
+});
+
+const agentUrl = () => process.env.AI_SERVICE_URL ?? "http://localhost:8000";
+const agentHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${process.env.AGENT_SHARED_SECRET ?? ""}`,
+});
+
 // POST /api/ai/generate — proxy to the agent's full new-event plan generator.
-// Body: { prompt, template, currency, budget_cap } -> full plan (header + items).
 aiRouter.post("/generate", validate(generateSchema), async (req, res) => {
-  const agentUrl = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
   try {
-    const upstream = await fetch(`${agentUrl}/event/plan`, {
+    const upstream = await fetch(`${agentUrl()}/event/plan`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.AGENT_SHARED_SECRET ?? ""}`,
-      },
+      headers: agentHeaders(),
       body: JSON.stringify(req.body),
     });
-    if (!upstream.ok) {
-      const text = await upstream.text();
-      return res.status(upstream.status).json({ error: text });
-    }
-    const data = await upstream.json();
-    res.json(data);
+    if (!upstream.ok) return res.status(upstream.status).json({ error: await upstream.text() });
+    res.json(await upstream.json());
+  } catch {
+    res.status(503).json({ error: "AI service unavailable" });
+  }
+});
+
+// POST /api/ai/chat — conversational assistant over org data. Admin only.
+aiRouter.post("/chat", requirePermission("ai.chat"), validate(chatSchema), async (req, res) => {
+  const { orgId } = req.ctx!;
+  if (!orgId) return res.status(403).json({ error: "No organization" });
+  try {
+    const upstream = await fetch(`${agentUrl()}/chat`, {
+      method: "POST",
+      headers: agentHeaders(),
+      body: JSON.stringify({ ...req.body, org_id: orgId }),
+    });
+    if (!upstream.ok) return res.status(upstream.status).json({ error: await upstream.text() });
+    res.json(await upstream.json());
   } catch {
     res.status(503).json({ error: "AI service unavailable" });
   }
