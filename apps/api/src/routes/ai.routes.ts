@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireModule } from "../middleware/module.js";
 import { validate } from "../lib/validate.js";
+import { getAgentConfig, agentOverrides } from "../lib/agentConfig.js";
 
 export const aiRouter = Router();
 aiRouter.use(requireModule("ai_assistant"));
@@ -17,6 +18,7 @@ const generateSchema = z.object({
 // Body: { prompt, template, currency, budget_cap } -> full plan (header + items).
 aiRouter.post("/generate", validate(generateSchema), async (req, res) => {
   const agentUrl = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
+  const overrides = agentOverrides(await getAgentConfig(), "plan");
   try {
     const upstream = await fetch(`${agentUrl}/event/plan`, {
       method: "POST",
@@ -24,7 +26,7 @@ aiRouter.post("/generate", validate(generateSchema), async (req, res) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.AGENT_SHARED_SECRET ?? ""}`,
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({ ...req.body, ...overrides }),
     });
     if (!upstream.ok) {
       const text = await upstream.text();

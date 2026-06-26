@@ -1,6 +1,14 @@
 import { supabase } from "./supabase";
 import type { TenantConfig } from "@celeris/shared";
 
+export type AgentConfig = {
+  model: string;
+  temperature: number;
+  max_tokens: number | null;
+  quote_system_prompt: string | null;
+  plan_system_prompt: string | null;
+};
+
 const BASE = import.meta.env.VITE_API_URL ?? "";
 
 function getOrgSlug(): string | null {
@@ -126,12 +134,30 @@ export const api = {
     listUsers: () => request<any[]>("/super/users"),
     createOrg: (data: { name: string }) =>
       request<any>("/super/orgs", { method: "POST", body: JSON.stringify(data) }),
+    updateOrg: (id: string, data: { name?: string; slug?: string; status?: string }) =>
+      request<any>(`/super/orgs/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    setStatus: (id: string, status: string) =>
+      request<any>(`/super/orgs/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    toggleModule: (id: string, module: string, enabled: boolean) =>
+      request<any>(`/super/orgs/${id}/modules/toggle`, { method: "PATCH", body: JSON.stringify({ module, enabled }) }),
+    getOrgDetail: (id: string) =>
+      request<{ org: any; members: any[]; counts: Record<string, number> }>(`/super/orgs/${id}/detail`),
     assignUser: (data: { user_id: string; organization_id: string; makeAdmin: boolean }) =>
       request<void>("/super/assign", { method: "POST", body: JSON.stringify(data) }),
     grantSuper: (data: { user_id: string; grant: boolean }) =>
       request<void>("/super/grant", { method: "POST", body: JSON.stringify(data) }),
     deleteOrg: (organizationId: string) =>
       request<void>(`/super/orgs/${organizationId}`, { method: "DELETE" }),
+    createUser: (data: { email: string; password: string; full_name?: string; organization_id?: string; makeAdmin?: boolean }) =>
+      request<{ id: string; email: string }>("/super/users", { method: "POST", body: JSON.stringify(data) }),
+    resetPassword: (userId: string, password: string) =>
+      request<void>(`/super/users/${userId}/reset-password`, { method: "POST", body: JSON.stringify({ password }) }),
+    deleteUser: (userId: string) =>
+      request<void>(`/super/users/${userId}`, { method: "DELETE" }),
+    agentGetConfig: () => request<AgentConfig>("/super/agent/config"),
+    agentSetConfig: (data: AgentConfig) =>
+      request<AgentConfig>("/super/agent/config", { method: "PUT", body: JSON.stringify(data) }),
+    agentHealth: () => request<{ ok: boolean }>("/super/agent/health"),
   },
 
   quotes: {

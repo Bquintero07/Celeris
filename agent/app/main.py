@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 
-from .openai_client import client, MODEL
+from .openai_client import complete_json
 from .prompt import build_event_plan_prompt, build_prompt
 from .schemas import EventPlanRequest, EventPlanResponse, QuoteRequest, QuoteResponse
 
@@ -32,15 +32,11 @@ def health():
 )
 def suggest_quote(req: QuoteRequest) -> QuoteResponse:
     """Prompt + event context + available inventory -> structured quote lines (BOM)."""
-    completion = client.chat.completions.create(
-        model=MODEL,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": "Return ONLY valid JSON matching the schema."},
-            {"role": "user", "content": build_prompt(req)},
-        ],
+    content = complete_json(
+        build_prompt(req),
+        base_system="Return ONLY valid JSON matching the schema.",
+        config=req,
     )
-    content = completion.choices[0].message.content or "{}"
     return QuoteResponse.model_validate_json(content)
 
 
@@ -51,13 +47,9 @@ def suggest_quote(req: QuoteRequest) -> QuoteResponse:
 )
 def plan_event(req: EventPlanRequest) -> EventPlanResponse:
     """Free-text brief + template hint + budget cap -> a full new-event plan."""
-    completion = client.chat.completions.create(
-        model=MODEL,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": "Return ONLY valid JSON matching the schema."},
-            {"role": "user", "content": build_event_plan_prompt(req)},
-        ],
+    content = complete_json(
+        build_event_plan_prompt(req),
+        base_system="Return ONLY valid JSON matching the schema.",
+        config=req,
     )
-    content = completion.choices[0].message.content or "{}"
     return EventPlanResponse.model_validate_json(content)

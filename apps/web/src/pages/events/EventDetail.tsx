@@ -30,6 +30,14 @@ const CATS = [
 const STATUSES = ["borrador", "planificacion", "confirmado", "en_curso", "finalizado", "cancelado"];
 const TYPES    = ["concierto", "charla", "exposicion", "privado", "publico", "corporativo", "boda", "otro"];
 
+// API errors arrive as Error(message) where message is the raw response body,
+// usually JSON like {"error":"..."}. Extract a readable message.
+function parseApiError(err: any): string | null {
+  const m = err?.message;
+  if (typeof m !== "string") return null;
+  try { return JSON.parse(m).error ?? m; } catch { return m; }
+}
+
 const APPROVAL_COLORS: Record<string, string> = {
   draft:    "bg-muted text-muted-foreground border-border",
   review:   "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -221,14 +229,22 @@ export function EventDetail() {
   };
 
   const downloadPdf = async () => {
-    const r = await api.events.exportPdf(id!, currency);
-    if (r.base64) downloadBase64(r.base64, r.filename, "application/pdf");
-    else toast.error("PDF generation failed");
+    try {
+      const r = await api.events.exportPdf(id!, currency);
+      if (r.base64) downloadBase64(r.base64, r.filename, "application/pdf");
+      else toast.error("PDF generation failed");
+    } catch (err: any) {
+      toast.error(parseApiError(err) ?? "No se pudo generar el PDF");
+    }
   };
   const downloadXls = async () => {
-    const r = await api.events.exportExcel(id!, currency);
-    if (r.base64) downloadBase64(r.base64, r.filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    else toast.error("Export failed");
+    try {
+      const r = await api.events.exportExcel(id!, currency);
+      if (r.base64) downloadBase64(r.base64, r.filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      else toast.error("Export failed");
+    } catch (err: any) {
+      toast.error(parseApiError(err) ?? "No se pudo exportar");
+    }
   };
 
   return (

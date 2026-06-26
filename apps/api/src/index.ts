@@ -65,7 +65,10 @@ app.use("/api/availability", availabilityRouter);
 app.use("/api/analytics",    analyticsRouter);
 app.use("/api/billing",      billingRouter);
 app.use("/api/templates",    templatesRouter);
-app.use("/api/super",        sensitiveLimiter, superRouter);
+// Note: super routes are gated by requireSuper + the global apiLimiter (300/15min).
+// We deliberately do NOT use sensitiveLimiter here — the operator console makes many
+// legitimate reads/flag-toggles and 20/15min throttles normal use.
+app.use("/api/super",        superRouter);
 app.use("/api/ai",           aiRouter);
 
 const port = Number(process.env.PORT ?? 3000);
