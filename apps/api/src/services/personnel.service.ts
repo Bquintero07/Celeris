@@ -3,11 +3,21 @@ import { prisma } from "../lib/prisma.js";
 
 export async function list(ctx: AuthContext) {
   if (!ctx.orgId) return [];
+  // is_busy = assigned to an event happening right now (not cancelled/finished).
   return prisma.$queryRaw<any[]>`
-    SELECT id, full_name, role, skills, available, hourly_rate, email, phone, notes, user_id, created_at, updated_at
-    FROM public.personnel
-    WHERE organization_id = ${ctx.orgId}::uuid
-    ORDER BY full_name
+    SELECT p.id, p.full_name, p.role, p.skills, p.available, p.hourly_rate,
+           p.email, p.phone, p.notes, p.user_id, p.created_at, p.updated_at,
+           EXISTS (
+             SELECT 1 FROM public.event_items ei
+             JOIN public.events ev ON ev.id = ei.event_id
+             WHERE ei.personnel_id = p.id
+               AND ev.status NOT IN ('cancelado','finalizado')
+               AND ev.start_date <= now()
+               AND (ev.end_date IS NULL OR ev.end_date >= now())
+           ) AS is_busy
+    FROM public.personnel p
+    WHERE p.organization_id = ${ctx.orgId}::uuid
+    ORDER BY p.full_name
   `;
 }
 

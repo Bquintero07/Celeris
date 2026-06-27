@@ -24,7 +24,7 @@ export function Inventory() {
 
   const save = async (form: any) => {
     try {
-      await api.equipment.upsert({ ...form, quantity: Number(form.quantity), unit_cost: Number(form.unit_cost) });
+      await api.equipment.upsert({ ...form, subcategory: form.subcategory?.trim() || null, quantity: Number(form.quantity), unit_cost: Number(form.unit_cost) });
       qc.invalidateQueries({ queryKey: ["equipment"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false); setEditing(null);
@@ -48,7 +48,7 @@ export function Inventory() {
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
-          <EquipmentDialog editing={editing} onSave={save} />
+          <EquipmentDialog key={editing?.id ?? "new"} editing={editing} onSave={save} />
         </Dialog>
       </div>
 
@@ -59,7 +59,10 @@ export function Inventory() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
-                  <Badge variant="outline" className="text-xs mt-1">{label(CATEGORY_LABELS, item.category)}</Badge>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <Badge variant="outline" className="text-xs">{label(CATEGORY_LABELS, item.category)}</Badge>
+                    {item.subcategory && <Badge variant="secondary" className="text-xs">{item.subcategory}</Badge>}
+                  </div>
                 </div>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" onClick={() => { setEditing(item); setOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
@@ -67,7 +70,18 @@ export function Inventory() {
                 </div>
               </div>
               <div className="mt-3 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-muted-foreground">Cantidad</span><span>{item.quantity}</span></div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Disponibles</span>
+                  <span className={item.available_qty === 0 ? "text-destructive font-medium" : "font-medium"}>
+                    {item.available_qty ?? item.quantity} / {item.quantity}
+                  </span>
+                </div>
+                {item.reserved_qty > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">En próximos eventos</span>
+                    <span className="text-amber-500">{item.reserved_qty}</span>
+                  </div>
+                )}
                 <div className="flex justify-between"><span className="text-muted-foreground">Costo unitario</span><span>{fmt(Number(item.unit_cost), { decimals: 2 })}</span></div>
                 {item.location && <div className="flex justify-between"><span className="text-muted-foreground">Ubicación</span><span>{item.location}</span></div>}
               </div>
@@ -81,7 +95,7 @@ export function Inventory() {
 }
 
 function EquipmentDialog({ editing, onSave }: { editing: any; onSave: (f: any) => void }) {
-  const [f, setF] = useState(editing ?? { name: "", category: "equipo", quantity: 1, unit_cost: 0, location: "", notes: "" });
+  const [f, setF] = useState(editing ?? { name: "", category: "equipo", subcategory: "", quantity: 1, unit_cost: 0, location: "", notes: "" });
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} equipo</DialogTitle></DialogHeader>
@@ -94,6 +108,7 @@ function EquipmentDialog({ editing, onSave }: { editing: any; onSave: (f: any) =
             <SelectContent>{CATS.map((c) => <SelectItem key={c} value={c}>{label(CATEGORY_LABELS, c)}</SelectItem>)}</SelectContent>
           </Select>
         </div>
+        <div><Label>Subcategoría</Label><Input value={f.subcategory ?? ""} onChange={(e) => setF({ ...f, subcategory: e.target.value })} placeholder="Ej. PA, robótica, truss…" /></div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Cantidad</Label><Input type="number" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value })} /></div>
           <div><Label>Costo unitario</Label><Input type="number" step="0.01" value={f.unit_cost} onChange={(e) => setF({ ...f, unit_cost: e.target.value })} /></div>

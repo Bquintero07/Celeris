@@ -49,7 +49,7 @@ export function Suppliers() {
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
-          <SupplierDialog editing={editing} onSave={save} />
+          <SupplierDialog key={editing?.id ?? "new"} editing={editing} onSave={save} />
         </Dialog>
       </div>
 

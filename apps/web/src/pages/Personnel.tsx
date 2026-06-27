@@ -50,7 +50,7 @@ export function Personnel() {
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
-          <PersonDialog editing={editing} onSave={save} />
+          <PersonDialog key={editing?.id ?? "new"} editing={editing} onSave={save} />
         </Dialog>
       </div>
 
@@ -64,8 +64,8 @@ export function Personnel() {
                   <p className="text-sm text-muted-foreground">{p.role}</p>
                 </div>
                 <div className="flex gap-1">
-                  <Badge variant={p.available ? "default" : "outline"} className="text-xs">
-                    {p.available ? "Disponible" : "Ocupado"}
+                  <Badge variant={p.is_busy ? "destructive" : p.available ? "default" : "outline"} className="text-xs">
+                    {p.is_busy ? "En evento" : p.available ? "Disponible" : "No disponible"}
                   </Badge>
                 </div>
               </div>

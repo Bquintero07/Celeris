@@ -9,9 +9,10 @@ export const equipmentRouter = Router();
 equipmentRouter.use(requireModule("inventory"));
 
 const createEquipmentSchema = z.object({
-  name:      z.string().min(1, "name is required"),
-  category:  ItemCategory.optional(),
-  quantity:  z.number().int().nonnegative().optional(),
+  name:        z.string().min(1, "name is required"),
+  category:    ItemCategory.optional(),
+  subcategory: z.string().optional().nullable(),
+  quantity:    z.number().int().nonnegative().optional(),
   unit_cost: z.number().nonnegative().optional(),
   condition: z.string().optional().nullable(),
   location:  z.string().optional().nullable(),
