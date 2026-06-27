@@ -71,7 +71,7 @@ function AppSidebar() {
           )}
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <span className="font-display text-lg font-bold truncate block">
+              <span className="font-display text-lg font-bold block break-words">
                 {orgName ?? "Celeris"}
               </span>
               {/* Co-branding: when inside a tenant workspace, keep Celeris visible. */}

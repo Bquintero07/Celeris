@@ -14,11 +14,3 @@ export function CelerisLogo({ size = 32, className, title = "Celeris" }: Props) 
     />
   );
 }
-
-export function CelerisWordmark({ className }: { className?: string }) {
-  return (
-    <span className={"font-display font-bold tracking-tight " + (className ?? "")}>
-      Celeris
-    </span>
-  );
-}
