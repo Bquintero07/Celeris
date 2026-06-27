@@ -10,6 +10,7 @@ export type AgentConfig = {
   max_tokens: number | null;
   quote_system_prompt: string | null;
   plan_system_prompt: string | null;
+  updated_at: string | null;
 };
 
 const DEFAULTS: AgentConfig = {
@@ -18,12 +19,13 @@ const DEFAULTS: AgentConfig = {
   max_tokens: null,
   quote_system_prompt: null,
   plan_system_prompt: null,
+  updated_at: null,
 };
 
 export async function getAgentConfig(): Promise<AgentConfig> {
   try {
-    const rows = await prisma.$queryRaw<AgentConfig[]>`
-      SELECT model, temperature, max_tokens, quote_system_prompt, plan_system_prompt
+    const rows = await prisma.$queryRaw<any[]>`
+      SELECT model, temperature, max_tokens, quote_system_prompt, plan_system_prompt, updated_at
       FROM public.agent_config WHERE id = 1 LIMIT 1
     `;
     const r = rows[0];
@@ -34,6 +36,7 @@ export async function getAgentConfig(): Promise<AgentConfig> {
       max_tokens: r.max_tokens != null ? Number(r.max_tokens) : null,
       quote_system_prompt: r.quote_system_prompt ?? null,
       plan_system_prompt: r.plan_system_prompt ?? null,
+      updated_at: r.updated_at ? new Date(r.updated_at).toISOString() : null,
     };
   } catch {
     // Table not migrated yet — never break AI calls over config.

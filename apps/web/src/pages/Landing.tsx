@@ -60,13 +60,10 @@ export function Landing() {
           <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link to="/auth">
               <Button size="lg" className="glow-primary rounded-md px-6 text-sm font-medium">
-                Empezar gratis <ArrowUpRight className="ml-1 h-4 w-4" />
+                Empezar ahora <ArrowUpRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
             <Link to="/auth">
-              <Button size="lg" variant="outline" className="rounded-md px-6 text-sm font-medium border-border/60 bg-card/30 backdrop-blur">
-                Ver demo
-              </Button>
             </Link>
           </div>
 

@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException
 
-from .chat_tools import TOOLS, execute_tool
+from .chat_tools import TOOLS, execute_tool, gather_plan_context
 from .openai_client import client, MODEL, complete_json
 from .prompt import build_event_plan_prompt, build_prompt
 from .schemas import (
@@ -52,9 +52,11 @@ def suggest_quote(req: QuoteRequest) -> QuoteResponse:
     dependencies=[Depends(require_shared_secret)],
 )
 def plan_event(req: EventPlanRequest) -> EventPlanResponse:
-    """Free-text brief + template hint + budget cap -> a full new-event plan."""
+    """Free-text brief + template hint + budget cap -> a full new-event plan,
+    grounded in the org's real inventory, crew and knowledge base."""
+    context = gather_plan_context(req.org_id, req.prompt) if req.org_id else None
     content = complete_json(
-        build_event_plan_prompt(req),
+        build_event_plan_prompt(req, context),
         base_system="Return ONLY valid JSON matching the schema.",
         config=req,
     )

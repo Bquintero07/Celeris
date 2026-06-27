@@ -61,6 +61,7 @@ class EventPlanRequest(AgentOverrides):
     template: str | None = None
     currency: str = "COP"
     budget_cap: float | None = None
+    org_id: str | None = None
 
 
 class EventPlanItem(BaseModel):

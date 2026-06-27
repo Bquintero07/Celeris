@@ -34,11 +34,12 @@ const agentHeaders = () => ({
 // POST /api/ai/generate — proxy to the agent's full new-event plan generator.
 aiRouter.post("/generate", validate(generateSchema), async (req, res) => {
   const overrides = agentOverrides(await getAgentConfig(), "plan");
+  const org_id = req.ctx?.orgId; // lets the agent ground the plan in the org's real inventory/crew/RAG
   try {
     const upstream = await fetch(`${agentUrl()}/event/plan`, {
       method: "POST",
       headers: agentHeaders(),
-      body: JSON.stringify({ ...req.body, ...overrides }),
+      body: JSON.stringify({ ...req.body, org_id, ...overrides }),
     });
     if (!upstream.ok) return res.status(upstream.status).json({ error: await upstream.text() });
     res.json(await upstream.json());

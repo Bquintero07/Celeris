@@ -102,6 +102,52 @@ def _row(row: dict) -> dict:
     return {k: _clean(v) for k, v in row.items()}
 
 
+def gather_plan_context(org_id: str, brief: str) -> dict:
+    """For event planning: pull the org's REAL owned inventory, available crew and
+    any relevant knowledge-base snippets, so the generated plan is grounded in what
+    actually exists instead of invented quantities."""
+    conn = get_connection()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """SELECT name, category, quantity, unit_cost
+                   FROM public.equipment WHERE organization_id = %s
+                   ORDER BY category, name""",
+                (org_id,),
+            )
+            inventory = [_row(dict(r)) for r in cur.fetchall()]
+
+            cur.execute(
+                """SELECT full_name, role, hourly_rate
+                   FROM public.personnel
+                   WHERE organization_id = %s AND available = true
+                   ORDER BY role, full_name""",
+                (org_id,),
+            )
+            crew = [_row(dict(r)) for r in cur.fetchall()]
+
+            docs = []
+            try:
+                embedding = openai_client.embeddings.create(
+                    model=EMBED_MODEL, input=brief, dimensions=EMBED_DIMS,
+                ).data[0].embedding
+                vec_str = "[" + ",".join(str(x) for x in embedding) + "]"
+                cur.execute(
+                    """SELECT content, metadata->>'name' AS source
+                       FROM public.documents
+                       WHERE metadata->>'org_id' = %s
+                       ORDER BY embedding <=> %s::vector LIMIT 5""",
+                    (org_id, vec_str),
+                )
+                docs = [{"content": r["content"], "source": r["source"]} for r in cur.fetchall()]
+            except Exception:
+                docs = []  # RAG is best-effort; never block a plan on it.
+
+            return {"inventory": inventory, "crew": crew, "docs": docs}
+    finally:
+        conn.close()
+
+
 def execute_tool(name: str, args: dict, org_id: str) -> dict:
     conn = get_connection()
     try:

@@ -7,6 +7,7 @@ export type AgentConfig = {
   max_tokens: number | null;
   quote_system_prompt: string | null;
   plan_system_prompt: string | null;
+  updated_at?: string | null;
 };
 
 const BASE = import.meta.env.VITE_API_URL ?? "";

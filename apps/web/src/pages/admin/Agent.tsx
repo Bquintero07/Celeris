@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,19 @@ import { api, type AgentConfig } from "@/lib/api";
 
 const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"];
 
+function PromptStatus({ value }: { value: string | null }) {
+  const len = value?.trim().length ?? 0;
+  return len > 0 ? (
+    <span className="flex items-center gap-1 text-xs text-emerald-500">
+      <CircleCheck className="h-3.5 w-3.5" /> En uso · {len} caracteres
+    </span>
+  ) : (
+    <span className="text-xs text-muted-foreground">Sin configurar</span>
+  );
+}
+
 export function AdminAgent() {
+  const qc = useQueryClient();
   const cfgQ = useQuery({ queryKey: ["agent-config"], queryFn: () => api.superAdmin.agentGetConfig() });
   const healthQ = useQuery({ queryKey: ["agent-health"], queryFn: () => api.superAdmin.agentHealth(), refetchInterval: 15000 });
   const [form, setForm] = useState<AgentConfig | null>(null);
@@ -21,7 +33,11 @@ export function AdminAgent() {
 
   const saveMut = useMutation({
     mutationFn: () => api.superAdmin.agentSetConfig(form!),
-    onSuccess: (d) => { setForm(d); toast.success("Configuración del agente guardada"); },
+    onSuccess: (d) => {
+      setForm(d);
+      qc.setQueryData(["agent-config"], d); // keep the cache in sync so revisiting shows the saved values
+      toast.success("Configuración del agente guardada");
+    },
     onError: (e: any) => toast.error(e?.message ?? "Error al guardar"),
   });
 
@@ -66,18 +82,27 @@ export function AdminAgent() {
         </div>
 
         <div>
-          <Label>Instrucción extra para planes de evento (opcional)</Label>
-          <Textarea rows={3} value={form.plan_system_prompt ?? ""} placeholder="Se agrega como system prompt adicional…"
+          <div className="flex justify-between items-center">
+            <Label>Instrucción extra para planes de evento (opcional)</Label>
+            <PromptStatus value={form.plan_system_prompt} />
+          </div>
+          <Textarea rows={8} value={form.plan_system_prompt ?? ""} placeholder="Se agrega como system prompt adicional…"
             onChange={(e) => set({ plan_system_prompt: e.target.value || null })} />
         </div>
 
         <div>
-          <Label>Instrucción extra para cotizaciones (opcional)</Label>
-          <Textarea rows={3} value={form.quote_system_prompt ?? ""} placeholder="Se agrega como system prompt adicional…"
+          <div className="flex justify-between items-center">
+            <Label>Instrucción extra para cotizaciones (opcional)</Label>
+            <PromptStatus value={form.quote_system_prompt} />
+          </div>
+          <Textarea rows={8} value={form.quote_system_prompt ?? ""} placeholder="Se agrega como system prompt adicional…"
             onChange={(e) => set({ quote_system_prompt: e.target.value || null })} />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-muted-foreground">
+            {form.updated_at ? `Última actualización: ${new Date(form.updated_at).toLocaleString("es-CO")}` : "Sin guardar todavía"}
+          </span>
           <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}>
             {saveMut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Guardar
           </Button>
