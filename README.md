@@ -6,15 +6,18 @@
 
 - **Events & quotes** — create events, build itemized quote lines, track margin/profit per line and per quote
 - **AI quote assistant** — a dedicated agent suggests quote line items (equipment, crew, suppliers) from a natural-language brief and the tenant's own inventory
+- **AI chat assistant** — a conversational agent that answers questions about the tenant's events, clients, and finances by querying live data through tool calls (admin-only)
+- **Knowledge base (RAG)** — upload documents per tenant; they are ingested via n8n into a pgvector store so the AI can answer from them
 - **Inventory, suppliers & crew** — manage owned equipment, external suppliers, and personnel with availability/scheduling conflict checks
 - **Clients (CRM)** — billing-ready client records with tax ID, contact info, and history
 - **Approval workflow** — draft → review → approved → sent → rejected, with an immutable audit log
 - **Billing & exports** — PDF invoices and Excel quote exports, with margin visibility gated by role
 - **Analytics** — revenue and margin breakdowns by event, by client, and by period
 - **Event templates** — reusable line-item sets to speed up recurring event types
-- **White-label branding** — per-tenant logo and brand colors
+- **White-label branding** — per-tenant logo and brand colors, with Celeris co-branding kept visible alongside the tenant identity
 - **Module gating** — each tenant only sees the feature modules enabled for their plan
-- **Super-admin console** — cross-tenant management: create/suspend organizations, toggle modules, manage users
+- **Super-admin console** — a dedicated operator workspace (separate from the tenant UI) for cross-tenant management: create/suspend/delete organizations, per-tenant feature-flag toggles, full user management (create, reset password, delete, assign to org, grant/revoke super-admin), and AI agent configuration (model, temperature, prompts)
+- **Spanish UI** — all user-facing text is in Spanish; code and comments stay in English. Quotes remain multi-currency (COP/USD)
 
 ## Tech Stack
 
@@ -22,8 +25,9 @@
 |---|---|
 | Frontend | React 19, Vite 6, React Router v7, TanStack Query, Tailwind CSS v4, shadcn/ui (Radix) |
 | API | Node.js, TypeScript, Express, Prisma (typed client, raw SQL queries) |
-| AI agent | Python, FastAPI, OpenAI API |
-| Database & Auth | Supabase (PostgreSQL, Auth, Row-Level Security, Storage) |
+| AI agent | Python, FastAPI, OpenAI API (quote/plan generation + chat with DB tool calling) |
+| RAG ingestion | n8n workflow → Supabase Vector Store (pgvector) |
+| Database & Auth | Supabase (PostgreSQL + pgvector, Auth, Row-Level Security, Storage) |
 | Shared contracts | `packages/shared` — RBAC permissions map, module catalog, shared types |
 | Deployment | Vercel (web), Render (api + agent), Docker for local/agent packaging |
 
@@ -36,9 +40,12 @@ apps/
             scopes every query by organization_id
 packages/
   shared/   Single source of truth for roles, permissions, and module keys
-agent/      FastAPI microservice — generates AI quote suggestions, called only by the API
+agent/      FastAPI microservice — AI quote/plan generation and the chat assistant
+            (with DB tool calling); called only by the API. Behavior is tunable
+            via the agent_config table (model, temperature, prompts)
 supabase/
   migrations/  SQL schema and RLS policies — the source of truth for the database
+n8n/        RAG ingestion workflow that embeds uploaded documents into pgvector
 ```
 
 **Multi-tenancy & security model**
