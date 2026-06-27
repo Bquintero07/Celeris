@@ -58,10 +58,10 @@ export function Onboarding() {
   return (
     <div className="min-h-screen px-4 py-12 md:py-20 max-w-5xl mx-auto">
       <div className="text-center mb-10">
-        <div className="text-[0.65rem] tracking-[0.35em] uppercase text-muted-foreground">Welcome</div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold mt-2">Set up your access</h1>
+        <div className="text-[0.65rem] tracking-[0.35em] uppercase text-muted-foreground">Bienvenido</div>
+        <h1 className="font-display text-3xl md:text-4xl font-semibold mt-2">Configurá tu acceso</h1>
         <p className="text-sm text-muted-foreground mt-3 max-w-xl mx-auto">
-          Are you creating a new organization or does your team already have one in Celeris? Choose an option to continue.
+          ¿Estás creando una organización nueva o tu equipo ya tiene una en Celeris? Elegí una opción para continuar.
         </p>
       </div>
 
@@ -79,10 +79,10 @@ function CreateCard() {
   const mut = useMutation({
     mutationFn: () => api.onboarding.createOrg({ name: name.trim() }),
     onSuccess: (org) => {
-      toast.success(`Organization "${org.name}" created. You are the admin.`);
+      toast.success(`Organización "${org.name}" creada. Sos el admin.`);
       navigate("/brand-settings", { replace: true });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Error creating organization"),
+    onError: (e: any) => toast.error(e?.message ?? "Error al crear la organización"),
   });
 
   return (
@@ -90,22 +90,22 @@ function CreateCard() {
       <CardHeader>
         <div className="flex items-center gap-2 text-primary">
           <Sparkles className="h-5 w-5" />
-          <CardTitle>Create new organization</CardTitle>
+          <CardTitle>Crear nueva organización</CardTitle>
         </div>
         <CardDescription>
-          You'll have your own isolated workspace. You'll be the admin and can customize the brand and invite your team.
+          Vas a tener tu propio espacio aislado. Serás el admin y podrás personalizar la marca e invitar a tu equipo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="orgname">Company or organization name</Label>
+          <Label htmlFor="orgname">Nombre de la empresa u organización</Label>
           <Input id="orgname" value={name} onChange={(e) => setName(e.target.value)}
-                 placeholder="e.g. Aurora Productions Inc." maxLength={200} />
+                 placeholder="Ej. Aurora Productions Inc." maxLength={200} />
         </div>
         <Button className="w-full" onClick={() => mut.mutate()} disabled={!name.trim() || mut.isPending}>
           {mut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           <Building2 className="h-4 w-4 mr-2" />
-          Create and customize brand
+          Crear y personalizar marca
         </Button>
       </CardContent>
     </Card>
@@ -118,10 +118,10 @@ function JoinCard() {
   const mut = useMutation({
     mutationFn: () => api.onboarding.joinOrg({ code: code.trim().toUpperCase() }),
     onSuccess: (org) => {
-      toast.success(`Joined ${org.name}. Ask your admin to assign you a role.`);
+      toast.success(`Te uniste a ${org.name}. Pedile a tu admin que te asigne un rol.`);
       navigate("/dashboard", { replace: true });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Invalid code"),
+    onError: (e: any) => toast.error(e?.message ?? "Código inválido"),
   });
 
   return (
@@ -129,22 +129,22 @@ function JoinCard() {
       <CardHeader>
         <div className="flex items-center gap-2 text-foreground">
           <KeyRound className="h-5 w-5" />
-          <CardTitle>Join an organization</CardTitle>
+          <CardTitle>Unirse a una organización</CardTitle>
         </div>
         <CardDescription>
-          Ask your organization administrator for the invite code. You'll join as a guest and the admin will assign you a role.
+          Pedile el código de invitación al administrador de tu organización. Te unirás como invitado y el admin te asignará un rol.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="code">Invite code</Label>
+          <Label htmlFor="code">Código de invitación</Label>
           <Input id="code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())}
                  placeholder="ABCD1234XY" maxLength={20} className="tracking-widest font-mono uppercase" />
         </div>
         <Button variant="outline" className="w-full" onClick={() => mut.mutate()}
                 disabled={code.trim().length < 4 || mut.isPending}>
           {mut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Join
+          Unirse
         </Button>
       </CardContent>
     </Card>

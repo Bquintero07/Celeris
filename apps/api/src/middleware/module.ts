@@ -8,7 +8,7 @@ export function requireModule(moduleKey: ModuleKey) {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (req.ctx?.isSuperAdmin) return next();
     const orgId = req.ctx?.orgId;
-    if (!orgId) return res.status(403).json({ error: "No organization" });
+    if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
     const rows = await prisma.$queryRaw<OrgRow[]>`
       SELECT enabled_modules FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1

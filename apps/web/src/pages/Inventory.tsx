@@ -28,26 +28,26 @@ export function Inventory() {
       qc.invalidateQueries({ queryKey: ["equipment"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false); setEditing(null);
-      toast.success("Saved");
+      toast.success("Guardado");
     } catch (e: any) { toast.error(e.message); }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this item?")) return;
+    if (!confirm("¿Eliminar este ítem?")) return;
     await api.equipment.delete(id);
     qc.invalidateQueries({ queryKey: ["equipment"] });
-    toast.success("Deleted");
+    toast.success("Eliminado");
   };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Boxes className="h-7 w-7 text-primary" /> Inventory</h1>
-          <p className="text-sm text-muted-foreground">Equipment, furniture and physical resources</p>
+          <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Boxes className="h-7 w-7 text-primary" /> Inventario</h1>
+          <p className="text-sm text-muted-foreground">Equipos, mobiliario y recursos físicos</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
           <EquipmentDialog editing={editing} onSave={save} />
         </Dialog>
       </div>
@@ -67,15 +67,15 @@ export function Inventory() {
                 </div>
               </div>
               <div className="mt-3 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span>{item.quantity}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Unit cost</span><span>{fmt(Number(item.unit_cost), { decimals: 2 })}</span></div>
-                {item.location && <div className="flex justify-between"><span className="text-muted-foreground">Location</span><span>{item.location}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Cantidad</span><span>{item.quantity}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Costo unitario</span><span>{fmt(Number(item.unit_cost), { decimals: 2 })}</span></div>
+                {item.location && <div className="flex justify-between"><span className="text-muted-foreground">Ubicación</span><span>{item.location}</span></div>}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-      {data && data.length === 0 && <p className="text-sm text-muted-foreground">No equipment registered.</p>}
+      {data && data.length === 0 && <p className="text-sm text-muted-foreground">No hay equipos registrados.</p>}
     </div>
   );
 }
@@ -84,24 +84,24 @@ function EquipmentDialog({ editing, onSave }: { editing: any; onSave: (f: any) =
   const [f, setF] = useState(editing ?? { name: "", category: "equipo", quantity: 1, unit_cost: 0, location: "", notes: "" });
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>{editing ? "Edit" : "New"} equipment</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} equipo</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>Name</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
+        <div><Label>Nombre</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
         <div>
-          <Label>Category</Label>
+          <Label>Categoría</Label>
           <Select value={f.category} onValueChange={(v) => setF({ ...f, category: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{CATS.map((c) => <SelectItem key={c} value={c}>{label(CATEGORY_LABELS, c)}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label>Quantity</Label><Input type="number" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value })} /></div>
-          <div><Label>Unit cost</Label><Input type="number" step="0.01" value={f.unit_cost} onChange={(e) => setF({ ...f, unit_cost: e.target.value })} /></div>
+          <div><Label>Cantidad</Label><Input type="number" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value })} /></div>
+          <div><Label>Costo unitario</Label><Input type="number" step="0.01" value={f.unit_cost} onChange={(e) => setF({ ...f, unit_cost: e.target.value })} /></div>
         </div>
-        <div><Label>Location</Label><Input value={f.location ?? ""} onChange={(e) => setF({ ...f, location: e.target.value })} /></div>
-        <div><Label>Notes</Label><Input value={f.notes ?? ""} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+        <div><Label>Ubicación</Label><Input value={f.location ?? ""} onChange={(e) => setF({ ...f, location: e.target.value })} /></div>
+        <div><Label>Notas</Label><Input value={f.notes ?? ""} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
       </div>
-      <DialogFooter><Button onClick={() => onSave(f)}>Save</Button></DialogFooter>
+      <DialogFooter><Button onClick={() => onSave(f)}>Guardar</Button></DialogFooter>
     </DialogContent>
   );
 }

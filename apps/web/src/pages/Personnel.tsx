@@ -31,12 +31,12 @@ export function Personnel() {
       qc.invalidateQueries({ queryKey: ["personnel"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false); setEditing(null);
-      toast.success("Saved");
+      toast.success("Guardado");
     } catch (e: any) { toast.error(e.message); }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this person?")) return;
+    if (!confirm("¿Eliminar a esta persona?")) return;
     await api.personnel.delete(id);
     qc.invalidateQueries({ queryKey: ["personnel"] });
   };
@@ -45,11 +45,11 @@ export function Personnel() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Users className="h-7 w-7 text-primary" /> Personnel</h1>
-          <p className="text-sm text-muted-foreground">Roles, rates and availability of the operations team</p>
+          <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Users className="h-7 w-7 text-primary" /> Personal</h1>
+          <p className="text-sm text-muted-foreground">Roles, tarifas y disponibilidad del equipo de operaciones</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
           <PersonDialog editing={editing} onSave={save} />
         </Dialog>
       </div>
@@ -65,12 +65,12 @@ export function Personnel() {
                 </div>
                 <div className="flex gap-1">
                   <Badge variant={p.available ? "default" : "outline"} className="text-xs">
-                    {p.available ? "Available" : "Busy"}
+                    {p.available ? "Disponible" : "Ocupado"}
                   </Badge>
                 </div>
               </div>
               <div className="text-sm flex justify-between">
-                <span className="text-muted-foreground">{symbol}/hour</span>
+                <span className="text-muted-foreground">{symbol}/hora</span>
                 <span className="font-semibold">{fmt(Number(p.hourly_rate), { decimals: 2 })}</span>
               </div>
               {p.email && <div className="text-xs flex items-center gap-1 text-muted-foreground"><Mail className="h-3 w-3" />{p.email}</div>}
@@ -82,7 +82,7 @@ export function Personnel() {
               )}
               <div className="flex gap-1 pt-2">
                 <Button size="sm" variant="ghost" onClick={() => { setEditing({ ...p, skills: (p.skills ?? []).join(", ") }); setOpen(true); }}>
-                  <Pencil className="h-3 w-3 mr-1" /> Edit
+                  <Pencil className="h-3 w-3 mr-1" /> Editar
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-3 w-3" /></Button>
               </div>
@@ -90,7 +90,7 @@ export function Personnel() {
           </Card>
         ))}
       </div>
-      {data && data.length === 0 && <p className="text-sm text-muted-foreground">No personnel registered.</p>}
+      {data && data.length === 0 && <p className="text-sm text-muted-foreground">No hay personal registrado.</p>}
     </div>
   );
 }
@@ -99,21 +99,21 @@ function PersonDialog({ editing, onSave }: { editing: any; onSave: (f: any) => v
   const [f, setF] = useState(editing ?? { full_name: "", role: "", hourly_rate: 0, email: "", phone: "", skills: "", available: true, notes: "" });
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>{editing ? "Edit" : "New"} member</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} miembro</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>Full name</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
+        <div><Label>Nombre completo</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label>Role</Label><Input value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} placeholder="Sound technician" /></div>
-          <div><Label>Hourly rate</Label><Input type="number" step="0.01" value={f.hourly_rate} onChange={(e) => setF({ ...f, hourly_rate: e.target.value })} /></div>
+          <div><Label>Rol</Label><Input value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} placeholder="Técnico de sonido" /></div>
+          <div><Label>Tarifa por hora</Label><Input type="number" step="0.01" value={f.hourly_rate} onChange={(e) => setF({ ...f, hourly_rate: e.target.value })} /></div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Email</Label><Input type="email" value={f.email ?? ""} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
-          <div><Label>Phone</Label><Input value={f.phone ?? ""} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
+          <div><Label>Teléfono</Label><Input value={f.phone ?? ""} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
         </div>
-        <div><Label>Skills (comma-separated)</Label><Input value={f.skills ?? ""} onChange={(e) => setF({ ...f, skills: e.target.value })} placeholder="Pro Tools, Yamaha, Ableton" /></div>
-        <div className="flex items-center gap-2"><Switch checked={f.available} onCheckedChange={(v) => setF({ ...f, available: v })} /><Label>Available</Label></div>
+        <div><Label>Habilidades (separadas por coma)</Label><Input value={f.skills ?? ""} onChange={(e) => setF({ ...f, skills: e.target.value })} placeholder="Pro Tools, Yamaha, Ableton" /></div>
+        <div className="flex items-center gap-2"><Switch checked={f.available} onCheckedChange={(v) => setF({ ...f, available: v })} /><Label>Disponible</Label></div>
       </div>
-      <DialogFooter><Button onClick={() => onSave(f)}>Save</Button></DialogFooter>
+      <DialogFooter><Button onClick={() => onSave(f)}>Guardar</Button></DialogFooter>
     </DialogContent>
   );
 }

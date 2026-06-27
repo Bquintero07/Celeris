@@ -16,31 +16,31 @@ export function Dashboard() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">General overview of your events and operations</p>
+          <h1 className="font-display text-3xl font-bold">Inicio</h1>
+          <p className="text-sm text-muted-foreground">Vista general de tus eventos y operaciones</p>
         </div>
         <Link to="/events/new">
           <Button className="glow-primary">
-            <Sparkles className="h-4 w-4 mr-1" /> New AI Event
+            <Sparkles className="h-4 w-4 mr-1" /> Nuevo evento con IA
           </Button>
         </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <KpiCard icon={Calendar} label="Events" value={data?.counts.events ?? 0} loading={isLoading} />
-        <KpiCard icon={Users} label="Personnel" value={data?.counts.personnel ?? 0} loading={isLoading} />
-        <KpiCard icon={Truck} label="Suppliers" value={data?.counts.suppliers ?? 0} loading={isLoading} />
-        <KpiCard icon={Package} label="Equipment" value={data?.counts.equipment ?? 0} loading={isLoading} />
+        <KpiCard icon={Calendar} label="Eventos" value={data?.counts.events ?? 0} loading={isLoading} />
+        <KpiCard icon={Users} label="Personal" value={data?.counts.personnel ?? 0} loading={isLoading} />
+        <KpiCard icon={Truck} label="Proveedores" value={data?.counts.suppliers ?? 0} loading={isLoading} />
+        <KpiCard icon={Package} label="Equipos" value={data?.counts.equipment ?? 0} loading={isLoading} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <FinCard icon={DollarSign} label="Total Budget" value={fmt(data?.financial.totalBudget ?? 0)} loading={isLoading} />
-        <FinCard icon={TrendingUp} label="Projected Revenue" value={fmt(data?.financial.totalRevenue ?? 0)} loading={isLoading} />
+        <FinCard icon={DollarSign} label="Presupuesto total" value={fmt(data?.financial.totalBudget ?? 0)} loading={isLoading} />
+        <FinCard icon={TrendingUp} label="Ingresos proyectados" value={fmt(data?.financial.totalRevenue ?? 0)} loading={isLoading} />
         <FinCard
           icon={TrendingUp}
-          label="Estimated Margin"
+          label="Margen estimado"
           value={fmt(data?.financial.margin ?? 0)}
-          sub={`${(data?.financial.marginPct ?? 0).toFixed(1)}% profitability`}
+          sub={`${(data?.financial.marginPct ?? 0).toFixed(1)}% de rentabilidad`}
           tone={(data?.financial.margin ?? 0) >= 0 ? "success" : "destructive"}
           loading={isLoading}
         />
@@ -48,17 +48,17 @@ export function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Upcoming Events</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Próximos eventos</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {(data?.upcoming ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">No scheduled events.</p>
+              <p className="text-sm text-muted-foreground">No hay eventos agendados.</p>
             )}
             {data?.upcoming.map((e: any) => (
               <Link key={e.id} to={`/events/${e.id}`} className="block rounded-lg border border-border p-3 hover:border-primary/40 transition">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-semibold">{e.title}</div>
-                    <div className="text-xs text-muted-foreground">{new Date(e.start_date!).toLocaleString("en-US")}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(e.start_date!).toLocaleString("es-CO")}</div>
                   </div>
                   <Badge variant="secondary">{label(EVENT_TYPE_LABELS, e.event_type)}</Badge>
                 </div>
@@ -68,10 +68,10 @@ export function Dashboard() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Recent Events</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Eventos recientes</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {(data?.recent ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">No events yet. <Link to="/events/new" className="text-primary underline">Create the first one</Link>.</p>
+              <p className="text-sm text-muted-foreground">Aún no hay eventos. <Link to="/events/new" className="text-primary underline">Creá el primero</Link>.</p>
             )}
             {data?.recent.map((e: any) => (
               <Link key={e.id} to={`/events/${e.id}`} className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-muted/50">

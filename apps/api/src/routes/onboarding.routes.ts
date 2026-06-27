@@ -22,7 +22,7 @@ onboardingRouter.get("/status", async (req, res) => {
 onboardingRouter.post("/create-org", async (req, res) => {
   const userId = req.ctx!.userId;
   const { name } = req.body as { name: string };
-  if (!name?.trim()) return res.status(400).json({ error: "Name is required" });
+  if (!name?.trim()) return res.status(400).json({ error: "El nombre es obligatorio" });
 
   const joinCode = genJoinCode();
 
@@ -52,13 +52,13 @@ onboardingRouter.post("/create-org", async (req, res) => {
 onboardingRouter.post("/join", async (req, res) => {
   const userId = req.ctx!.userId;
   const { code } = req.body as { code: string };
-  if (!code?.trim()) return res.status(400).json({ error: "Code is required" });
+  if (!code?.trim()) return res.status(400).json({ error: "El código es obligatorio" });
 
   type OrgRow = { id: string; name: string };
   const orgs = await prisma.$queryRaw<OrgRow[]>`
     SELECT id, name FROM public.organizations WHERE join_code = ${code.trim().toUpperCase()} LIMIT 1
   `;
-  if (!orgs[0]) return res.status(404).json({ error: "Invalid invite code" });
+  if (!orgs[0]) return res.status(404).json({ error: "Código de invitación inválido" });
   const org = orgs[0];
 
   await prisma.$transaction([

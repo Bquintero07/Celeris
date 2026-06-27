@@ -17,23 +17,23 @@ export function Team() {
     try {
       await api.team.setRole({ user_id, role, action: has ? "remove" : "add" });
       qc.invalidateQueries({ queryKey: ["team"] });
-      toast.success("Role updated");
-    } catch (e: any) { toast.error(e.message || "Only admins can change roles"); }
+      toast.success("Rol actualizado");
+    } catch (e: any) { toast.error(e.message || "Solo los admins pueden cambiar roles"); }
   };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Package className="h-7 w-7 text-primary" /> Team</h1>
-        <p className="text-sm text-muted-foreground">Users in your organization and their roles (admin only).</p>
+        <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Package className="h-7 w-7 text-primary" /> Equipo</h1>
+        <p className="text-sm text-muted-foreground">Usuarios de tu organización y sus roles (solo admin).</p>
       </div>
 
       {orgCode?.join_code && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-4 space-y-3">
             <div>
-              <div className="text-[0.65rem] tracking-[0.3em] uppercase text-muted-foreground">Invite your team to <strong>{orgCode.name}</strong></div>
-              <p className="text-xs text-muted-foreground mt-1">Share this link: anyone who signs up or signs in from it will join your organization directly.</p>
+              <div className="text-[0.65rem] tracking-[0.3em] uppercase text-muted-foreground">Invitá a tu equipo a <strong>{orgCode.name}</strong></div>
+              <p className="text-xs text-muted-foreground mt-1">Compartí este enlace: cualquiera que se registre o inicie sesión desde él se unirá directamente a tu organización.</p>
             </div>
             <div className="flex items-center gap-2">
               <Input
@@ -45,19 +45,19 @@ export function Team() {
               <Button size="sm" variant="outline" onClick={() => {
                 const url = `${window.location.origin}/auth?invite=${orgCode.join_code}`;
                 navigator.clipboard.writeText(url);
-                toast.success("Link copied");
+                toast.success("Enlace copiado");
               }}>
-                <Copy className="h-4 w-4 mr-2" /> Copy link
+                <Copy className="h-4 w-4 mr-2" /> Copiar enlace
               </Button>
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/40">
-              <span>Or share the code:</span>
+              <span>O compartí el código:</span>
               <span className="font-mono tracking-widest text-foreground">{orgCode.join_code}</span>
               <Button size="sm" variant="ghost" className="h-7" onClick={() => {
                 navigator.clipboard.writeText(orgCode.join_code);
-                toast.success("Code copied");
+                toast.success("Código copiado");
               }}>
-                <Copy className="h-3 w-3 mr-1" /> Copy code
+                <Copy className="h-3 w-3 mr-1" /> Copiar código
               </Button>
             </div>
           </CardContent>
@@ -89,7 +89,7 @@ export function Team() {
           </Card>
         ))}
       </div>
-      {data && data.length === 0 && <p className="text-sm text-muted-foreground">No users.</p>}
+      {data && data.length === 0 && <p className="text-sm text-muted-foreground">No hay usuarios.</p>}
     </div>
   );
 }

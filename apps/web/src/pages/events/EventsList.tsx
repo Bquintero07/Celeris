@@ -16,24 +16,24 @@ export function EventsList() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold">Events</h1>
-          <p className="text-sm text-muted-foreground">All organization events</p>
+          <h1 className="font-display text-3xl font-bold">Eventos</h1>
+          <p className="text-sm text-muted-foreground">Todos los eventos de la organización</p>
         </div>
         <Link to="/events/new">
-          <Button className="glow-primary"><Sparkles className="h-4 w-4 mr-1" /> New with AI</Button>
+          <Button className="glow-primary"><Sparkles className="h-4 w-4 mr-1" /> Nuevo con IA</Button>
         </Link>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
 
       {data && data.length === 0 && (
         <Card>
           <CardContent className="p-10 text-center">
             <Sparkles className="h-10 w-10 text-primary mx-auto mb-3" />
-            <h2 className="font-display text-xl font-semibold">No events yet</h2>
-            <p className="text-sm text-muted-foreground mt-1">Create your first event with AI assistance.</p>
+            <h2 className="font-display text-xl font-semibold">Aún no hay eventos</h2>
+            <p className="text-sm text-muted-foreground mt-1">Creá tu primer evento con ayuda de la IA.</p>
             <Link to="/events/new" className="inline-block mt-4">
-              <Button>Create event</Button>
+              <Button>Crear evento</Button>
             </Link>
           </CardContent>
         </Card>
@@ -56,11 +56,11 @@ export function EventsList() {
                 )}
                 {e.start_date && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" /> {new Date(e.start_date).toLocaleDateString("en-US")}
+                    <Calendar className="h-3 w-3" /> {new Date(e.start_date).toLocaleDateString("es-CO")}
                   </div>
                 )}
                 <div className="pt-2 text-xs text-muted-foreground">
-                  Budget: <span className="text-foreground font-semibold">{fmt(Number(e.budget || 0))}</span>
+                  Presupuesto: <span className="text-foreground font-semibold">{fmt(Number(e.budget || 0))}</span>
                 </div>
               </CardContent>
             </Card>

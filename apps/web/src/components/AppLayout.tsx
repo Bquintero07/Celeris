@@ -17,18 +17,18 @@ import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
 const navItems = [
-  { title: "Dashboard",   url: "/dashboard",      icon: LayoutDashboard },
-  { title: "Events",      url: "/events",          icon: Calendar },
-  { title: "Clients",     url: "/clients",         icon: UserRound },
-  { title: "Inventory",   url: "/inventory",       icon: Boxes },
-  { title: "Personnel",   url: "/personnel",       icon: Users },
-  { title: "Suppliers",   url: "/suppliers",       icon: Truck },
-  { title: "Analytics",   url: "/analytics",       icon: BarChart3 },
-  { title: "Billing",     url: "/billing",         icon: Receipt },
-  { title: "Team",        url: "/team",            icon: Package },
-  { title: "Brand",       url: "/brand-settings",  icon: Settings },
-  { title: "AI Chat",     url: "/chat",            icon: MessageSquare },
-  { title: "Knowledge",   url: "/documents",       icon: BookOpen },
+  { title: "Inicio",      url: "/dashboard",      icon: LayoutDashboard },
+  { title: "Eventos",     url: "/events",          icon: Calendar },
+  { title: "Clientes",    url: "/clients",         icon: UserRound },
+  { title: "Inventario",  url: "/inventory",       icon: Boxes },
+  { title: "Personal",    url: "/personnel",       icon: Users },
+  { title: "Proveedores", url: "/suppliers",       icon: Truck },
+  { title: "Analítica",   url: "/analytics",       icon: BarChart3 },
+  { title: "Facturación", url: "/billing",         icon: Receipt },
+  { title: "Equipo",      url: "/team",            icon: Package },
+  { title: "Marca",       url: "/brand-settings",  icon: Settings },
+  { title: "Chat IA",     url: "/chat",            icon: MessageSquare },
+  { title: "Conocimiento", url: "/documents",      icon: BookOpen },
 ];
 
 function AppSidebar() {
@@ -52,7 +52,7 @@ function AppSidebar() {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    toast.success("Signed out");
+    toast.success("Sesión cerrada");
     navigate("/auth", { replace: true });
   };
 
@@ -70,15 +70,23 @@ function AppSidebar() {
             <CelerisLogo size={32} />
           )}
           {!collapsed && (
-            <span className="font-display text-lg font-bold truncate">
-              {orgName ?? "Celeris"}
-            </span>
+            <div className="min-w-0 leading-tight">
+              <span className="font-display text-lg font-bold truncate block">
+                {orgName ?? "Celeris"}
+              </span>
+              {/* Co-branding: when inside a tenant workspace, keep Celeris visible. */}
+              {orgName && (
+                <span className="text-[0.6rem] tracking-[0.15em] uppercase text-muted-foreground">
+                  por Celeris
+                </span>
+              )}
+            </div>
           )}
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleNav.map((item) => {
@@ -101,7 +109,7 @@ function AppSidebar() {
       <SidebarFooter>
         <Button variant="ghost" size="sm" onClick={signOut} className="justify-start">
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sign out</span>}
+          {!collapsed && <span className="ml-2">Cerrar sesión</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
@@ -145,10 +153,10 @@ export function AppLayout() {
               <header className="h-14 flex items-center border-b border-border/40 px-4 sticky top-0 bg-background/60 backdrop-blur-md z-10 gap-3">
                 <SidebarTrigger />
                 <div className="ml-2 text-[0.65rem] tracking-[0.35em] uppercase text-muted-foreground hidden sm:block">
-                  Celeris · Operations
+                  Celeris · Operaciones
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <span className="text-[0.65rem] tracking-[0.3em] uppercase text-muted-foreground hidden md:inline">Currency</span>
+                  <span className="text-[0.65rem] tracking-[0.3em] uppercase text-muted-foreground hidden md:inline">Moneda</span>
                   <CurrencySwitcher />
                 </div>
               </header>

@@ -31,7 +31,7 @@ templatesRouter.get("/", requirePermission("events.edit"), async (req, res) => {
 
 templatesRouter.get("/:id", requirePermission("events.edit"), validateUuidParams("id"), async (req, res) => {
   const tpl = await svc.get(req.ctx!, req.params.id as string);
-  if (!tpl) return res.status(404).json({ error: "Not found" });
+  if (!tpl) return res.status(404).json({ error: "No encontrado" });
   res.json(tpl);
 });
 

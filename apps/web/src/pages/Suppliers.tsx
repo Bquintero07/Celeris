@@ -30,12 +30,12 @@ export function Suppliers() {
       qc.invalidateQueries({ queryKey: ["suppliers"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false); setEditing(null);
-      toast.success("Saved");
+      toast.success("Guardado");
     } catch (e: any) { toast.error(e.message); }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this supplier?")) return;
+    if (!confirm("¿Eliminar este proveedor?")) return;
     await api.suppliers.delete(id);
     qc.invalidateQueries({ queryKey: ["suppliers"] });
   };
@@ -44,23 +44,23 @@ export function Suppliers() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Truck className="h-7 w-7 text-primary" /> Suppliers</h1>
-          <p className="text-sm text-muted-foreground">Internal and external. Search and direct contact.</p>
+          <h1 className="font-display text-3xl font-bold flex items-center gap-2"><Truck className="h-7 w-7 text-primary" /> Proveedores</h1>
+          <p className="text-sm text-muted-foreground">Internos y externos. Búsqueda y contacto directo.</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> Nuevo</Button></DialogTrigger>
           <SupplierDialog editing={editing} onSave={save} />
         </Dialog>
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+        <Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
         <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">All</SelectItem>
-            <SelectItem value="interno">Internal</SelectItem>
-            <SelectItem value="externo">External</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="interno">Interno</SelectItem>
+            <SelectItem value="externo">Externo</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -79,16 +79,16 @@ export function Suppliers() {
               {s.contact_name && <p className="text-sm">{s.contact_name}</p>}
               {s.email && <a href={`mailto:${s.email}`} className="text-xs flex items-center gap-1 text-primary hover:underline"><Mail className="h-3 w-3" />{s.email}</a>}
               {s.phone && <a href={`tel:${s.phone}`} className="text-xs flex items-center gap-1 text-primary hover:underline"><Phone className="h-3 w-3" />{s.phone}</a>}
-              {s.website && <a href={s.website} target="_blank" rel="noreferrer" className="text-xs flex items-center gap-1 text-primary hover:underline"><Globe className="h-3 w-3" />Website</a>}
+              {s.website && <a href={s.website} target="_blank" rel="noreferrer" className="text-xs flex items-center gap-1 text-primary hover:underline"><Globe className="h-3 w-3" />Sitio web</a>}
               <div className="flex gap-1 pt-2">
-                <Button size="sm" variant="ghost" onClick={() => { setEditing(s); setOpen(true); }}><Pencil className="h-3 w-3 mr-1" /> Edit</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setEditing(s); setOpen(true); }}><Pencil className="h-3 w-3 mr-1" /> Editar</Button>
                 <Button size="sm" variant="ghost" onClick={() => remove(s.id)}><Trash2 className="h-3 w-3" /></Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-      {filtered.length === 0 && <p className="text-sm text-muted-foreground">No suppliers found.</p>}
+      {filtered.length === 0 && <p className="text-sm text-muted-foreground">No se encontraron proveedores.</p>}
     </div>
   );
 }
@@ -97,31 +97,31 @@ function SupplierDialog({ editing, onSave }: { editing: any; onSave: (f: any) =>
   const [f, setF] = useState(editing ?? { name: "", category: "", type: "externo", contact_name: "", email: "", phone: "", website: "", notes: "" });
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>{editing ? "Edit" : "New"} supplier</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} proveedor</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>Name</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
+        <div><Label>Nombre</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label>Category</Label><Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Catering, audio…" /></div>
+          <div><Label>Categoría</Label><Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Catering, audio…" /></div>
           <div>
-            <Label>Type</Label>
+            <Label>Tipo</Label>
             <Select value={f.type} onValueChange={(v) => setF({ ...f, type: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="interno">Internal</SelectItem>
-                <SelectItem value="externo">External</SelectItem>
+                <SelectItem value="interno">Interno</SelectItem>
+                <SelectItem value="externo">Externo</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div><Label>Contact person</Label><Input value={f.contact_name ?? ""} onChange={(e) => setF({ ...f, contact_name: e.target.value })} /></div>
+        <div><Label>Persona de contacto</Label><Input value={f.contact_name ?? ""} onChange={(e) => setF({ ...f, contact_name: e.target.value })} /></div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Email</Label><Input type="email" value={f.email ?? ""} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
-          <div><Label>Phone</Label><Input value={f.phone ?? ""} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
+          <div><Label>Teléfono</Label><Input value={f.phone ?? ""} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
         </div>
-        <div><Label>Website</Label><Input value={f.website ?? ""} onChange={(e) => setF({ ...f, website: e.target.value })} /></div>
-        <div><Label>Notes</Label><Input value={f.notes ?? ""} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
+        <div><Label>Sitio web</Label><Input value={f.website ?? ""} onChange={(e) => setF({ ...f, website: e.target.value })} /></div>
+        <div><Label>Notas</Label><Input value={f.notes ?? ""} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
       </div>
-      <DialogFooter><Button onClick={() => onSave(f)}>Save</Button></DialogFooter>
+      <DialogFooter><Button onClick={() => onSave(f)}>Guardar</Button></DialogFooter>
     </DialogContent>
   );
 }

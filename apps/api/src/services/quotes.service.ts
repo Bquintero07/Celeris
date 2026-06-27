@@ -79,7 +79,7 @@ export async function aiSuggest(
   opts: { prompt?: string; budget?: number; currency?: string },
 ): Promise<QuoteSuggestResponse> {
   const aiUrl = process.env.AI_SERVICE_URL ?? "http://localhost:8000";
-  if (!ctx.orgId) throw Object.assign(new Error("No organization"), { status: 403 });
+  if (!ctx.orgId) throw Object.assign(new Error("Sin organización"), { status: 403 });
 
   // Fetch event, org inventory and crew in parallel
   const [events, equipRows, crewRows] = await Promise.all([
@@ -102,7 +102,7 @@ export async function aiSuggest(
   ]);
 
   const event = events[0];
-  if (!event) throw Object.assign(new Error("Event not found"), { status: 404 });
+  if (!event) throw Object.assign(new Error("Evento no encontrado"), { status: 404 });
 
   // Build the payload that matches the agent's QuoteRequest schema
   const agentPayload = {
@@ -147,13 +147,13 @@ export async function applyLines(
   eventId: string,
   lines: QuoteSuggestLine[],
 ) {
-  if (!ctx.orgId) throw Object.assign(new Error("No organization"), { status: 403 });
+  if (!ctx.orgId) throw Object.assign(new Error("Sin organización"), { status: 403 });
 
   const events = await prisma.$queryRaw<any[]>`
     SELECT id FROM public.events
     WHERE id = ${eventId}::uuid AND organization_id = ${ctx.orgId}::uuid LIMIT 1
   `;
-  if (!events[0]) throw Object.assign(new Error("Event not found"), { status: 404 });
+  if (!events[0]) throw Object.assign(new Error("Evento no encontrado"), { status: 404 });
 
   await prisma.$executeRaw`DELETE FROM public.event_items WHERE event_id = ${eventId}::uuid`;
 

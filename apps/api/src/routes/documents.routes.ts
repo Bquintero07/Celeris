@@ -36,10 +36,10 @@ documentsRouter.post(
   upload.single("file"),
   async (req, res) => {
     const file = req.file;
-    if (!file) return res.status(400).json({ error: "No file provided" });
+    if (!file) return res.status(400).json({ error: "No se envió ningún archivo" });
 
     const { orgId, userId } = req.ctx!;
-    if (!orgId) return res.status(403).json({ error: "No organization" });
+    if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
     const fileType = ALLOWED_TYPES[file.mimetype] ?? "unknown";
 
@@ -72,7 +72,7 @@ documentsRouter.post(
 // GET /api/documents
 documentsRouter.get("/", requirePermission("documents.upload"), async (req, res) => {
   const { orgId } = req.ctx!;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
   const docs = await prisma.$queryRaw<any[]>`
     SELECT id, name, file_type, created_at
@@ -86,7 +86,7 @@ documentsRouter.get("/", requirePermission("documents.upload"), async (req, res)
 // DELETE /api/documents/:id
 documentsRouter.delete("/:id", requirePermission("documents.upload"), async (req, res) => {
   const { orgId } = req.ctx!;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
   await prisma.$executeRaw`
     DELETE FROM public.org_documents

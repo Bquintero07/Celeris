@@ -10,7 +10,7 @@ type EventRow = { id: string; title: string; start_date: Date | null; event_type
 // GET /api/dashboard/stats
 dashboardRouter.get("/stats", async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
   const [counts, financial, upcoming, recent] = await Promise.all([
     prisma.$queryRaw<CountsRow[]>`

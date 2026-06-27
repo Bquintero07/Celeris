@@ -9,15 +9,16 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/lib/currency";
 import { api } from "@/lib/api";
+import { EVENT_TYPE_LABELS, CATEGORY_LABELS, label } from "@/lib/labels";
 
 const templates = [
-  { id: "concierto", label: "Concert", icon: Music, prompt: "Live music concert for " },
-  { id: "charla", label: "Talk / Conference", icon: Mic, prompt: "Professional conference for " },
-  { id: "exposicion", label: "Exhibition", icon: ImgIcon, prompt: "Art exhibition for " },
-  { id: "privado", label: "Private event", icon: Lock, prompt: "Private gala dinner event for " },
-  { id: "publico", label: "Public event", icon: Globe, prompt: "Outdoor public festival for " },
-  { id: "corporativo", label: "Corporate", icon: Briefcase, prompt: "Corporate product launch for " },
-  { id: "boda", label: "Wedding", icon: Heart, prompt: "Elegant wedding for " },
+  { id: "concierto", label: "Concierto", icon: Music, prompt: "Concierto de música en vivo para " },
+  { id: "charla", label: "Charla / Conferencia", icon: Mic, prompt: "Conferencia profesional para " },
+  { id: "exposicion", label: "Exposición", icon: ImgIcon, prompt: "Exposición de arte para " },
+  { id: "privado", label: "Evento privado", icon: Lock, prompt: "Cena de gala privada para " },
+  { id: "publico", label: "Evento público", icon: Globe, prompt: "Festival público al aire libre para " },
+  { id: "corporativo", label: "Corporativo", icon: Briefcase, prompt: "Lanzamiento de producto corporativo para " },
+  { id: "boda", label: "Boda", icon: Heart, prompt: "Boda elegante para " },
 ];
 
 export function NewEvent() {
@@ -31,15 +32,15 @@ export function NewEvent() {
   const [saving, setSaving] = useState(false);
 
   const generate = async () => {
-    if (prompt.trim().length < 10) return toast.error("Please describe the event in more detail");
+    if (prompt.trim().length < 10) return toast.error("Describí el evento con más detalle");
     setLoading(true);
     try {
       const cap = budgetCap ? Number(budgetCap) : null;
       const result = await api.ai.generate({ prompt, template, currency, budget_cap: cap && cap > 0 ? cap : null });
       setPlan(result);
-      toast.success("Plan generated. Review it before saving.");
+      toast.success("Plan generado. Revisalo antes de guardar.");
     } catch (e: any) {
-      toast.error(e.message || "Error generating the plan");
+      toast.error(e.message || "Error al generar el plan");
     } finally {
       setLoading(false);
     }
@@ -53,7 +54,7 @@ export function NewEvent() {
     try {
       const event_type = VALID_TYPES.includes(plan.event_type) ? plan.event_type : "otro";
       const ev = await api.events.create({
-        title: String(plan.title || "Untitled event").slice(0, 200),
+        title: String(plan.title || "Evento sin título").slice(0, 200),
         event_type,
         description: plan.description ? String(plan.description).slice(0, 2000) : null,
         attendees: Number(plan.estimated_attendees) || 0,
@@ -64,7 +65,7 @@ export function NewEvent() {
       });
       const items = (plan.items ?? []).map((it: any) => ({
         category: String(it.category ?? "extras"),
-        name: String(it.name ?? "Item").slice(0, 200),
+        name: String(it.name ?? "Ítem").slice(0, 200),
         description: it.description ? String(it.description) : null,
         quantity: Number(it.quantity) || 1,
         unit_cost: Number(it.unit_cost) || 0,
@@ -73,10 +74,10 @@ export function NewEvent() {
       if (items.length > 0) {
         await api.events.bulkAddItems(ev.id, items);
       }
-      toast.success("Event created successfully");
+      toast.success("Evento creado correctamente");
       nav(`/events/${ev.id}`);
     } catch (e: any) {
-      toast.error(e.message || "Error saving");
+      toast.error(e.message || "Error al guardar");
     } finally {
       setSaving(false);
     }
@@ -88,13 +89,13 @@ export function NewEvent() {
     <div className="container mx-auto p-6 space-y-6 max-w-5xl">
       <div>
         <h1 className="font-display text-3xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" /> New AI Event
+          <Sparkles className="h-6 w-6 text-primary" /> Nuevo evento con IA
         </h1>
-        <p className="text-sm text-muted-foreground">Choose a template and describe your event. The AI will generate the full plan.</p>
+        <p className="text-sm text-muted-foreground">Elegí una plantilla y describí tu evento. La IA generará el plan completo.</p>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>1. Template</CardTitle></CardHeader>
+        <CardHeader><CardTitle>1. Plantilla</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
             {templates.map((t) => (
@@ -114,35 +115,35 @@ export function NewEvent() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>2. Describe your event</CardTitle></CardHeader>
+        <CardHeader><CardTitle>2. Describí tu evento</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Label htmlFor="p">Prompt</Label>
           <Textarea
             id="p"
             rows={5}
-            placeholder="e.g. Outdoor rock concert for 5000 people, 3 bands, large stage, food and drinks..."
+            placeholder="Ej. Concierto de rock al aire libre para 5000 personas, 3 bandas, escenario grande, comida y bebida..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             maxLength={2000}
           />
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
             <div>
-              <Label htmlFor="cap">Optional budget cap ({symbol})</Label>
+              <Label htmlFor="cap">Tope de presupuesto opcional ({symbol})</Label>
               <input
                 id="cap"
                 type="number"
                 min="0"
                 step="100"
-                placeholder="Leave empty for AI to decide"
+                placeholder="Dejá vacío para que decida la IA"
                 value={budgetCap}
                 onChange={(e) => setBudgetCap(e.target.value)}
                 className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
               />
-              <p className="text-xs text-muted-foreground mt-1">The AI will use market ranges and won't exceed this cap.</p>
+              <p className="text-xs text-muted-foreground mt-1">La IA usará rangos de mercado y no superará este tope.</p>
             </div>
             <Button onClick={generate} disabled={loading} className="glow-primary">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
-              Generate plan
+              Generar plan
             </Button>
           </div>
         </CardContent>
@@ -152,10 +153,10 @@ export function NewEvent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-              <span>3. Review the plan</span>
+              <span>3. Revisá el plan</span>
               <Button onClick={save} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                Save event
+                Guardar evento
               </Button>
             </CardTitle>
           </CardHeader>
@@ -163,8 +164,8 @@ export function NewEvent() {
             <div>
               <h3 className="font-display text-xl font-bold">{plan.title}</h3>
               <div className="flex gap-2 mt-1">
-                <Badge variant="secondary">{plan.event_type}</Badge>
-                <Badge variant="outline">{plan.estimated_attendees} attendees</Badge>
+                <Badge variant="secondary">{label(EVENT_TYPE_LABELS, plan.event_type)}</Badge>
+                <Badge variant="outline">{plan.estimated_attendees} asistentes</Badge>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               {plan.summary && <p className="mt-2 text-sm italic">{plan.summary}</p>}
@@ -172,27 +173,27 @@ export function NewEvent() {
 
             <div className="grid grid-cols-3 gap-3 text-sm">
               <div className="rounded-lg border border-border p-3">
-                <div className="text-xs text-muted-foreground">AI Budget</div>
+                <div className="text-xs text-muted-foreground">Presupuesto IA</div>
                 <div className="font-display font-bold text-lg">{fmt(Number(plan.estimated_budget))}</div>
               </div>
               <div className="rounded-lg border border-border p-3">
-                <div className="text-xs text-muted-foreground">Projected Revenue</div>
+                <div className="text-xs text-muted-foreground">Ingresos proyectados</div>
                 <div className="font-display font-bold text-lg">{fmt(Number(plan.estimated_revenue))}</div>
               </div>
               <div className="rounded-lg border border-border p-3">
-                <div className="text-xs text-muted-foreground">Items total</div>
+                <div className="text-xs text-muted-foreground">Total de ítems</div>
                 <div className="font-display font-bold text-lg">{fmt(totalCost)}</div>
               </div>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-2">{plan.items?.length ?? 0} items generated</h4>
+              <h4 className="font-semibold mb-2">{plan.items?.length ?? 0} ítems generados</h4>
               <div className="rounded-lg border border-border divide-y divide-border max-h-96 overflow-auto">
                 {plan.items?.map((it: any, i: number) => (
                   <div key={i} className="p-3 flex items-start justify-between gap-3 text-sm">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px]">{it.category}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{label(CATEGORY_LABELS, it.category)}</Badge>
                         <span className="font-medium">{it.name}</span>
                       </div>
                       {it.description && <div className="text-xs text-muted-foreground mt-1">{it.description}</div>}
@@ -204,7 +205,7 @@ export function NewEvent() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">You can edit, add or delete items after saving.</p>
+              <p className="text-xs text-muted-foreground mt-2">Podés editar, agregar o eliminar ítems después de guardar.</p>
             </div>
           </CardContent>
         </Card>

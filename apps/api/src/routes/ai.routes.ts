@@ -43,14 +43,14 @@ aiRouter.post("/generate", validate(generateSchema), async (req, res) => {
     if (!upstream.ok) return res.status(upstream.status).json({ error: await upstream.text() });
     res.json(await upstream.json());
   } catch {
-    res.status(503).json({ error: "AI service unavailable" });
+    res.status(503).json({ error: "Servicio de IA no disponible" });
   }
 });
 
 // POST /api/ai/chat — conversational assistant over org data. Admin only.
 aiRouter.post("/chat", requirePermission("ai.chat"), validate(chatSchema), async (req, res) => {
   const { orgId } = req.ctx!;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
   try {
     const upstream = await fetch(`${agentUrl()}/chat`, {
       method: "POST",
@@ -60,6 +60,6 @@ aiRouter.post("/chat", requirePermission("ai.chat"), validate(chatSchema), async
     if (!upstream.ok) return res.status(upstream.status).json({ error: await upstream.text() });
     res.json(await upstream.json());
   } catch {
-    res.status(503).json({ error: "AI service unavailable" });
+    res.status(503).json({ error: "Servicio de IA no disponible" });
   }
 });

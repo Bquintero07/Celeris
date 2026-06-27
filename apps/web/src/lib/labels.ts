@@ -1,47 +1,47 @@
 export const EVENT_STATUS_LABELS: Record<string, string> = {
-  borrador: "Draft",
-  planificacion: "Planning",
-  confirmado: "Confirmed",
-  en_curso: "In progress",
-  finalizado: "Completed",
-  cancelado: "Cancelled",
+  borrador: "Borrador",
+  planificacion: "Planificación",
+  confirmado: "Confirmado",
+  en_curso: "En curso",
+  finalizado: "Finalizado",
+  cancelado: "Cancelado",
 };
 
 export const EVENT_TYPE_LABELS: Record<string, string> = {
-  concierto: "Concert",
-  charla: "Talk",
-  exposicion: "Exhibition",
-  privado: "Private",
-  publico: "Public",
-  corporativo: "Corporate",
-  boda: "Wedding",
-  otro: "Other",
+  concierto: "Concierto",
+  charla: "Charla",
+  exposicion: "Exposición",
+  privado: "Privado",
+  publico: "Público",
+  corporativo: "Corporativo",
+  boda: "Boda",
+  otro: "Otro",
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  personal: "Personnel",
+  personal: "Personal",
   catering: "Catering",
-  equipo: "Equipment",
-  mobiliario: "Furniture",
+  equipo: "Equipo",
+  mobiliario: "Mobiliario",
   audio_video: "Audio / Video",
-  iluminacion: "Lighting",
-  transporte: "Transport",
-  seguridad: "Security",
-  permisos: "Permits",
+  iluminacion: "Iluminación",
+  transporte: "Transporte",
+  seguridad: "Seguridad",
+  permisos: "Permisos",
   marketing: "Marketing",
   extras: "Extras",
   // AI-suggested lines arrive with English categories before being applied/mapped.
-  equipment: "Equipment",
-  crew: "Personnel",
+  equipment: "Equipo",
+  crew: "Personal",
   supplier: "Extras",
 };
 
 export const APPROVAL_STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  review: "Under review",
-  approved: "Approved",
-  sent: "Sent",
-  rejected: "Rejected",
+  draft: "Borrador",
+  review: "En revisión",
+  approved: "Aprobado",
+  sent: "Enviado",
+  rejected: "Rechazado",
 };
 
 export function label<T extends Record<string, string>>(map: T, key: string): string {

@@ -14,7 +14,7 @@ const rolesSchema = z.object({
 // GET /api/team  — users in the org with their roles
 teamRouter.get("/", async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
   const rows = await prisma.$queryRaw<any[]>`
     SELECT
@@ -36,9 +36,9 @@ teamRouter.get("/", async (req, res) => {
 // POST /api/team/roles  { user_id, role, action: 'add'|'remove' }
 teamRouter.post("/roles", validate(rolesSchema), async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
   if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {
-    return res.status(403).json({ error: "Admin only" });
+    return res.status(403).json({ error: "Solo administradores" });
   }
 
   const { user_id, role, action } = req.body as {
@@ -64,14 +64,14 @@ teamRouter.post("/roles", validate(rolesSchema), async (req, res) => {
 // GET /api/team/join-code
 teamRouter.get("/join-code", async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
   if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {
-    return res.status(403).json({ error: "Admin only" });
+    return res.status(403).json({ error: "Solo administradores" });
   }
 
   const rows = await prisma.$queryRaw<{ join_code: string; name: string }[]>`
     SELECT join_code, name FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Organization not found" });
+  if (!rows[0]) return res.status(404).json({ error: "Organización no encontrada" });
   res.json({ join_code: rows[0].join_code, name: rows[0].name });
 });

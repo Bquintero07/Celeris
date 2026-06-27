@@ -24,7 +24,7 @@ export function Documents() {
   if (!isAdmin && !isSuperAdmin) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        You don't have permission to access this feature.
+        No tenés permiso para acceder a esta función.
       </div>
     );
   }
@@ -38,10 +38,10 @@ export function Documents() {
         await api.documents.upload(file);
         ok++;
       } catch (e: any) {
-        toast.error(`${file.name}: ${e.message ?? "Upload failed"}`);
+        toast.error(`${file.name}: ${e.message ?? "Falló la subida"}`);
       }
     }
-    if (ok) toast.success(`${ok} document${ok > 1 ? "s" : ""} uploaded`);
+    if (ok) toast.success(`${ok} documento${ok > 1 ? "s" : ""} subido${ok > 1 ? "s" : ""}`);
     setUploading(false);
     load();
   };
@@ -50,9 +50,9 @@ export function Documents() {
     try {
       await api.documents.delete(doc.id);
       setDocs(d => d.filter(x => x.id !== doc.id));
-      toast.success("Document deleted");
+      toast.success("Documento eliminado");
     } catch (e: any) {
-      toast.error(e.message ?? "Delete failed");
+      toast.error(e.message ?? "No se pudo eliminar");
     }
   };
 
@@ -64,9 +64,9 @@ export function Documents() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Knowledge Base</h1>
+        <h1 className="text-2xl font-bold">Base de conocimiento</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Upload documents so the AI assistant can answer questions about them.
+          Subí documentos para que el asistente IA pueda responder preguntas sobre ellos.
         </p>
       </div>
 
@@ -82,8 +82,8 @@ export function Documents() {
         ) : (
           <>
             <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-            <p className="font-medium">Drop files here or click to upload</p>
-            <p className="text-muted-foreground text-xs mt-1">PDF, DOCX, TXT, CSV, MD, JSON — max 20 MB</p>
+            <p className="font-medium">Soltá archivos acá o hacé clic para subir</p>
+            <p className="text-muted-foreground text-xs mt-1">PDF, DOCX, TXT, CSV, MD, JSON — máx. 20 MB</p>
           </>
         )}
         <input
@@ -123,7 +123,7 @@ export function Documents() {
       )}
 
       {docs.length === 0 && !uploading && (
-        <p className="text-center text-muted-foreground text-sm">No documents uploaded yet.</p>
+        <p className="text-center text-muted-foreground text-sm">Todavía no subiste documentos.</p>
       )}
     </div>
   );

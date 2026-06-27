@@ -69,7 +69,7 @@ export async function remove(ctx: AuthContext, id: string) {
 }
 
 export async function applyToEvent(ctx: AuthContext, templateId: string, eventId: string) {
-  if (!ctx.orgId) throw Object.assign(new Error("No organization"), { status: 403 });
+  if (!ctx.orgId) throw Object.assign(new Error("Sin organización"), { status: 403 });
 
   const [templates, items] = await Promise.all([
     prisma.$queryRaw<any[]>`
@@ -81,13 +81,13 @@ export async function applyToEvent(ctx: AuthContext, templateId: string, eventId
     `,
   ]);
 
-  if (!templates[0]) throw Object.assign(new Error("Template not found"), { status: 404 });
+  if (!templates[0]) throw Object.assign(new Error("Plantilla no encontrada"), { status: 404 });
 
   const events = await prisma.$queryRaw<any[]>`
     SELECT id FROM public.events
     WHERE id = ${eventId}::uuid AND organization_id = ${ctx.orgId}::uuid LIMIT 1
   `;
-  if (!events[0]) throw Object.assign(new Error("Event not found"), { status: 404 });
+  if (!events[0]) throw Object.assign(new Error("Evento no encontrado"), { status: 404 });
 
   const inserted: any[] = [];
   for (const item of items) {

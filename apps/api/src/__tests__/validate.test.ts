@@ -57,7 +57,7 @@ describe("validate()", () => {
     validate(schema)(makeReq({}), res, next);
     expect(next).not.toHaveBeenCalled();
     expect(res.capturedStatus).toBe(400);
-    expect(res.capturedJson.error).toBe("Validation failed");
+    expect(res.capturedJson.error).toBe("Datos inválidos");
     expect(res.capturedJson.issues[0].field).toBe("title");
     // Zod emits "Required" when the field is absent; the custom message fires on empty string
     expect(res.capturedJson.issues[0].message).toBe("Required");

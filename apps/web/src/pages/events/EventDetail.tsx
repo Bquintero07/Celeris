@@ -107,7 +107,7 @@ export function EventDetail() {
       qc.invalidateQueries({ queryKey: ["event", id] });
       qc.invalidateQueries({ queryKey: ["events"] });
       setApprovalNote("");
-      toast.success("Approval status updated");
+      toast.success("Estado de aprobación actualizado");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -118,12 +118,12 @@ export function EventDetail() {
     onSuccess: (rows) => {
       qc.invalidateQueries({ queryKey: ["event", id] });
       setTemplateOpen(false);
-      toast.success(`${rows.length} items added from template`);
+      toast.success(`${rows.length} ítems agregados desde la plantilla`);
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  if (isLoading || !data || !form) return <div className="p-6">Loading…</div>;
+  if (isLoading || !data || !form) return <div className="p-6">Cargando…</div>;
 
   const items      = data.items as any[];
   const totalCost  = items.reduce((s: number, i: any) => s + Number(i.total_cost), 0);
@@ -145,11 +145,11 @@ export function EventDetail() {
     qc.invalidateQueries({ queryKey: ["event", id] });
     qc.invalidateQueries({ queryKey: ["events"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    toast.success("Saved");
+    toast.success("Guardado");
   };
 
   const addItem = async () => {
-    if (!newItem.name) return toast.error("Name required");
+    if (!newItem.name) return toast.error("El nombre es obligatorio");
     await api.events.items.add(id!, {
       category: newItem.category,
       name: newItem.name,
@@ -158,7 +158,7 @@ export function EventDetail() {
     });
     setNewItem({ category: newItem.category, name: "", quantity: 1, unit_cost: 0 });
     qc.invalidateQueries({ queryKey: ["event", id] });
-    toast.success("Item added");
+    toast.success("Ítem agregado");
   };
 
   const removeItem = async (itemId: string) => {
@@ -174,12 +174,12 @@ export function EventDetail() {
   const removeEvent = async () => {
     if (!confirm("Delete this event?")) return;
     await api.events.delete(id!);
-    toast.success("Event deleted");
+    toast.success("Evento eliminado");
     nav("/events");
   };
 
   const assignPerson = async (person: any, hours: number, rate: number, notes: string) => {
-    if (!hours || hours <= 0) return toast.error("Enter hours");
+    if (!hours || hours <= 0) return toast.error("Ingresá las horas");
     await api.events.items.add(id!, {
       category: "personal",
       name: `${person.full_name} — ${person.role}`,
@@ -189,7 +189,7 @@ export function EventDetail() {
       notes: notes || null,
     });
     qc.invalidateQueries({ queryKey: ["event", id] });
-    toast.success(`${person.full_name} assigned`);
+    toast.success(`${person.full_name} asignado`);
   };
 
   const matchBudgetToItems = async () => {
@@ -197,7 +197,7 @@ export function EventDetail() {
     await api.events.update(id!, { budget: Number(totalCost.toFixed(2)) });
     qc.invalidateQueries({ queryKey: ["event", id] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
-    toast.success("Budget adjusted to items total");
+    toast.success("Presupuesto ajustado al total de ítems");
   };
 
   const generateWithAI = async () => {
@@ -209,7 +209,7 @@ export function EventDetail() {
       });
       setAiLines(result.lines ?? []); setAiNotes(result.notes ?? []);
     } catch (err: any) {
-      toast.error(err?.message ?? "AI service unavailable");
+      toast.error(err?.message ?? "Servicio de IA no disponible");
       setAiOpen(false);
     } finally {
       setAiLoading(false);
@@ -222,9 +222,9 @@ export function EventDetail() {
       qc.invalidateQueries({ queryKey: ["event", id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setAiOpen(false); setAiLines([]);
-      toast.success("AI quote applied");
+      toast.success("Cotización de IA aplicada");
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to apply lines");
+      toast.error(err?.message ?? "No se pudieron aplicar las líneas");
     }
   };
 
@@ -232,7 +232,7 @@ export function EventDetail() {
     try {
       const r = await api.events.exportPdf(id!, currency);
       if (r.base64) downloadBase64(r.base64, r.filename, "application/pdf");
-      else toast.error("PDF generation failed");
+      else toast.error("No se pudo generar el PDF");
     } catch (err: any) {
       toast.error(parseApiError(err) ?? "No se pudo generar el PDF");
     }
@@ -241,7 +241,7 @@ export function EventDetail() {
     try {
       const r = await api.events.exportExcel(id!, currency);
       if (r.base64) downloadBase64(r.base64, r.filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      else toast.error("Export failed");
+      else toast.error("No se pudo exportar");
     } catch (err: any) {
       toast.error(parseApiError(err) ?? "No se pudo exportar");
     }
@@ -252,7 +252,7 @@ export function EventDetail() {
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Link to="/events" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
-          <ArrowLeft className="h-4 w-4" /> Events
+          <ArrowLeft className="h-4 w-4" /> Eventos
         </Link>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>
@@ -263,49 +263,49 @@ export function EventDetail() {
 
       {/* Approval bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-sm text-muted-foreground">Quote status:</span>
+        <span className="text-sm text-muted-foreground">Estado de la cotización:</span>
         <Badge className={APPROVAL_COLORS[approvalStatus] ?? ""} variant="outline">
           {label(APPROVAL_STATUS_LABELS, approvalStatus)}
         </Badge>
         {canEdit && approvalStatus === "draft" && (
           <Button size="sm" variant="outline" onClick={() => approvalMut.mutate({ action: "submit" })} disabled={approvalMut.isPending}>
-            <Send className="h-3.5 w-3.5 mr-1" /> Submit for review
+            <Send className="h-3.5 w-3.5 mr-1" /> Enviar a revisión
           </Button>
         )}
         {canApprove && approvalStatus === "review" && (
           <>
             <Button size="sm" variant="outline" className="text-emerald-400 border-emerald-500/40"
               onClick={() => approvalMut.mutate({ action: "approve" })} disabled={approvalMut.isPending}>
-              <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
+              <CheckCircle className="h-3.5 w-3.5 mr-1" /> Aprobar
             </Button>
             <Button size="sm" variant="outline" className="text-destructive border-destructive/40"
               onClick={() => approvalMut.mutate({ action: "reject" })} disabled={approvalMut.isPending}>
-              <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+              <XCircle className="h-3.5 w-3.5 mr-1" /> Rechazar
             </Button>
           </>
         )}
         {canApprove && approvalStatus === "approved" && (
           <Button size="sm" variant="outline" className="text-blue-400 border-blue-500/40"
             onClick={() => approvalMut.mutate({ action: "send" })} disabled={approvalMut.isPending}>
-            <Send className="h-3.5 w-3.5 mr-1" /> Mark as sent
+            <Send className="h-3.5 w-3.5 mr-1" /> Marcar como enviada
           </Button>
         )}
         {canApprove && approvalStatus === "rejected" && (
           <Button size="sm" variant="outline"
             onClick={() => approvalMut.mutate({ action: "submit" })} disabled={approvalMut.isPending}>
-            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Re-submit
+            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reenviar
           </Button>
         )}
       </div>
 
       {/* KPIs — margin only shown if user has permission */}
       <div className={`grid gap-3 ${canViewMargin ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2"}`}>
-        <Kpi label="Total cost"  value={fmt(totalCost)} />
-        <Kpi label="Revenue"     value={fmt(revenue)} />
+        <Kpi label="Costo total"  value={fmt(totalCost)} />
+        <Kpi label="Ingresos"     value={fmt(revenue)} />
         {canViewMargin && (
           <>
-            <Kpi label="Margin"       value={fmt(margin)}               tone={margin    >= 0 ? "success" : "destructive"} />
-            <Kpi label="Profitability" value={`${marginPct.toFixed(1)}%`} tone={marginPct >= 0 ? "success" : "destructive"} />
+            <Kpi label="Margen"       value={fmt(margin)}               tone={margin    >= 0 ? "success" : "destructive"} />
+            <Kpi label="Rentabilidad" value={`${marginPct.toFixed(1)}%`} tone={marginPct >= 0 ? "success" : "destructive"} />
           </>
         )}
       </div>
@@ -313,14 +313,14 @@ export function EventDetail() {
       {Math.abs(Number(form.budget || 0) - totalCost) > 0.01 && (
         <div className="rounded-lg border border-dashed border-border bg-card/50 p-3 flex items-center justify-between gap-3 text-sm flex-wrap">
           <div>
-            <span className="text-muted-foreground">Saved budget: </span>
+            <span className="text-muted-foreground">Presupuesto guardado: </span>
             <span className="font-semibold">{fmt(Number(form.budget || 0))}</span>
-            <span className="text-muted-foreground"> · Items total: </span>
+            <span className="text-muted-foreground"> · Total de ítems: </span>
             <span className="font-semibold">{fmt(totalCost)}</span>
           </div>
           {canEdit && (
             <Button size="sm" variant="outline" onClick={matchBudgetToItems}>
-              <Wand2 className="h-4 w-4 mr-1" /> Adjust to total
+              <Wand2 className="h-4 w-4 mr-1" /> Ajustar al total
             </Button>
           )}
         </div>
@@ -330,69 +330,69 @@ export function EventDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Event details</span>
-            {canEdit && <Button size="sm" onClick={saveHeader}><Save className="h-4 w-4 mr-1" /> Save</Button>}
+            <span>Detalles del evento</span>
+            {canEdit && <Button size="sm" onClick={saveHeader}><Save className="h-4 w-4 mr-1" /> Guardar</Button>}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           <div className="md:col-span-2">
-            <Label>Title</Label>
+            <Label>Título</Label>
             <Input value={form.title} disabled={!canEdit} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </div>
           <div>
-            <Label>Type</Label>
+            <Label>Tipo</Label>
             <Select value={form.event_type} disabled={!canEdit} onValueChange={(v) => setForm({ ...form, event_type: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{label(EVENT_TYPE_LABELS, t)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Status</Label>
+            <Label>Estado</Label>
             <Select value={form.status} disabled={!canEdit} onValueChange={(v) => setForm({ ...form, status: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{STATUSES.map((t) => <SelectItem key={t} value={t}>{label(EVENT_STATUS_LABELS, t)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Client</Label>
+            <Label>Cliente</Label>
             <Select value={form.client_id ?? "__none__"} disabled={!canEdit} onValueChange={(v) => setForm({ ...form, client_id: v === "__none__" ? null : v })}>
-              <SelectTrigger><SelectValue placeholder="No client" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Sin cliente" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">No client</SelectItem>
+                <SelectItem value="__none__">Sin cliente</SelectItem>
                 {clientList.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Location</Label>
+            <Label>Ubicación</Label>
             <Input value={form.location ?? ""} disabled={!canEdit} onChange={(e) => setForm({ ...form, location: e.target.value })} />
           </div>
           <div>
-            <Label>Attendees</Label>
+            <Label>Asistentes</Label>
             <Input type="number" value={form.attendees ?? 0} disabled={!canEdit} onChange={(e) => setForm({ ...form, attendees: e.target.value })} />
           </div>
           <div>
-            <Label>Start</Label>
+            <Label>Inicio</Label>
             <Input type="datetime-local" disabled={!canEdit}
               value={form.start_date ? form.start_date.slice(0, 16) : ""}
               onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
           </div>
           <div>
-            <Label>End</Label>
+            <Label>Fin</Label>
             <Input type="datetime-local" disabled={!canEdit}
               value={form.end_date ? form.end_date.slice(0, 16) : ""}
               onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
           </div>
           <div>
-            <Label>Budget ({symbol})</Label>
+            <Label>Presupuesto ({symbol})</Label>
             <Input type="number" step="0.01" disabled={!canEdit} value={form.budget ?? 0} onChange={(e) => setForm({ ...form, budget: e.target.value })} />
           </div>
           <div>
-            <Label>Projected revenue ({symbol})</Label>
+            <Label>Ingresos proyectados ({symbol})</Label>
             <Input type="number" step="0.01" disabled={!canEdit} value={form.revenue ?? 0} onChange={(e) => setForm({ ...form, revenue: e.target.value })} />
           </div>
           <div className="md:col-span-2">
-            <Label>Description</Label>
+            <Label>Descripción</Label>
             <Textarea rows={3} disabled={!canEdit} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
         </CardContent>
@@ -402,23 +402,23 @@ export function EventDetail() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-            <span>Event items ({items.length})</span>
+            <span>Ítems del evento ({items.length})</span>
             {canEdit && (
               <div className="flex gap-2 flex-wrap">
                 <Button size="sm" variant="outline" onClick={generateWithAI} disabled={aiLoading}>
                   {aiLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                  Generate with AI
+                  Generar con IA
                 </Button>
 
                 {/* Template picker */}
                 <Dialog open={templateOpen} onOpenChange={setTemplateOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="outline"><LayoutTemplate className="h-4 w-4 mr-1" /> Use template</Button>
+                    <Button size="sm" variant="outline"><LayoutTemplate className="h-4 w-4 mr-1" /> Usar plantilla</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
-                    <DialogHeader><DialogTitle>Apply a template</DialogTitle></DialogHeader>
+                    <DialogHeader><DialogTitle>Aplicar una plantilla</DialogTitle></DialogHeader>
                     {templateList.length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-4">No templates yet. Create them in the Templates section.</p>
+                      <p className="text-sm text-muted-foreground py-4">Aún no hay plantillas. Creálas en la sección de Plantillas.</p>
                     ) : (
                       <div className="space-y-2 max-h-72 overflow-auto">
                         {templateList.map((t: any) => (
@@ -428,21 +428,21 @@ export function EventDetail() {
                               <p className="text-xs text-muted-foreground">{label(EVENT_TYPE_LABELS, t.event_type)}</p>
                             </div>
                             <Button size="sm" onClick={() => templateMut.mutate(t.id)} disabled={templateMut.isPending}>
-                              Apply
+                              Aplicar
                             </Button>
                           </div>
                         ))}
                       </div>
                     )}
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setTemplateOpen(false)}>Close</Button>
+                      <Button variant="outline" onClick={() => setTemplateOpen(false)}>Cerrar</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
 
                 <Dialog open={personnelOpen} onOpenChange={setPersonnelOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="outline"><UserPlus className="h-4 w-4 mr-1" /> Assign personnel</Button>
+                    <Button size="sm" variant="outline"><UserPlus className="h-4 w-4 mr-1" /> Asignar personal</Button>
                   </DialogTrigger>
                   <AssignPersonnelDialog
                     personnel={personnelList ?? []}
@@ -463,10 +463,10 @@ export function EventDetail() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{CATS.map((c) => <SelectItem key={c} value={c}>{label(CATEGORY_LABELS, c)}</SelectItem>)}</SelectContent>
               </Select>
-              <Input placeholder="Name" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
-              <Input type="number" placeholder="Qty" value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} />
-              <Input type="number" placeholder="Unit cost" value={newItem.unit_cost} onChange={(e) => setNewItem({ ...newItem, unit_cost: Number(e.target.value) })} />
-              <Button onClick={addItem}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+              <Input placeholder="Nombre" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
+              <Input type="number" placeholder="Cantidad" value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} />
+              <Input type="number" placeholder="Costo unitario" value={newItem.unit_cost} onChange={(e) => setNewItem({ ...newItem, unit_cost: Number(e.target.value) })} />
+              <Button onClick={addItem}><Plus className="h-4 w-4 mr-1" /> Agregar</Button>
             </div>
           )}
 
@@ -510,7 +510,7 @@ export function EventDetail() {
               </div>
             ))}
             {items.length === 0 && (
-              <p className="text-sm text-muted-foreground">No items yet. Add the first one above or use a template.</p>
+              <p className="text-sm text-muted-foreground">Aún no hay ítems. Agregá el primero arriba o usá una plantilla.</p>
             )}
           </div>
         </CardContent>
@@ -521,35 +521,35 @@ export function EventDetail() {
         <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" /> AI Quote Suggestion
+              <Sparkles className="h-5 w-5 text-primary" /> Sugerencia de cotización con IA
             </DialogTitle>
           </DialogHeader>
 
           {aiLoading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm">Analyzing event and generating quote lines…</p>
+              <p className="text-sm">Analizando el evento y generando las líneas de cotización…</p>
             </div>
           ) : (
             <div className="flex-1 overflow-auto space-y-4">
               {aiLines.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">No lines returned by the AI.</p>
+                <p className="text-sm text-muted-foreground py-4">La IA no devolvió líneas.</p>
               ) : (
                 <>
                   <p className="text-xs text-muted-foreground">
-                    Review and edit the suggested lines. Click <strong>Apply</strong> to replace the current event items.
+                    Revisá y editá las líneas sugeridas. Hacé clic en <strong>Aplicar</strong> para reemplazar los ítems actuales del evento.
                   </p>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="w-20">Qty</TableHead>
-                        <TableHead className="w-20">Days</TableHead>
-                        <TableHead className="w-28">Unit cost</TableHead>
-                        {canViewMargin && <TableHead className="w-24">Markup %</TableHead>}
+                        <TableHead>Categoría</TableHead>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead className="w-20">Cant.</TableHead>
+                        <TableHead className="w-20">Días</TableHead>
+                        <TableHead className="w-28">Costo unit.</TableHead>
+                        {canViewMargin && <TableHead className="w-24">Margen %</TableHead>}
                         <TableHead className="w-28 text-right">Total</TableHead>
-                        <TableHead className="w-24">Source</TableHead>
+                        <TableHead className="w-24">Origen</TableHead>
                         <TableHead className="w-8" />
                       </TableRow>
                     </TableHeader>
@@ -596,14 +596,14 @@ export function EventDetail() {
                     </TableBody>
                   </Table>
                   <div className="text-sm text-right text-muted-foreground pr-2">
-                    Total estimate:{" "}
+                    Estimado total:{" "}
                     <span className="font-bold text-foreground">
                       {fmt(aiLines.reduce((s, l) => s + Number(l.unitCost) * Number(l.quantity) * Number(l.days || 1) * (1 + Number(l.markup ?? 0) / 100), 0), { decimals: 0 })}
                     </span>
                   </div>
                   {aiNotes.length > 0 && (
                     <div className="rounded-lg bg-muted/50 border border-border p-3 text-xs space-y-1">
-                      <p className="font-semibold text-muted-foreground uppercase text-xs tracking-wide">AI notes</p>
+                      <p className="font-semibold text-muted-foreground uppercase text-xs tracking-wide">Notas de la IA</p>
                       {aiNotes.map((n, i) => <p key={i}>• {n}</p>)}
                     </div>
                   )}
@@ -612,9 +612,9 @@ export function EventDetail() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setAiOpen(false)} disabled={aiLoading}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setAiOpen(false)} disabled={aiLoading}>Cancelar</Button>
             <Button onClick={applyAILines} disabled={aiLoading || aiLines.length === 0}>
-              <Wand2 className="h-4 w-4 mr-1" /> Apply to event
+              <Wand2 className="h-4 w-4 mr-1" /> Aplicar al evento
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -655,7 +655,7 @@ function AssignPersonnelDialog({
 
   const assignAll = async () => {
     const entries = Object.entries(rows).filter(([, v]) => Number(v.hours) > 0);
-    if (entries.length === 0) return toast.error("Enter hours for at least one person");
+    if (entries.length === 0) return toast.error("Ingresá horas para al menos una persona");
     for (const [pid, v] of entries) {
       const p = personnel.find((x) => x.id === pid);
       if (!p) continue;
@@ -667,10 +667,10 @@ function AssignPersonnelDialog({
 
   return (
     <DialogContent className="max-w-2xl">
-      <DialogHeader><DialogTitle>Assign personnel to event</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>Asignar personal al evento</DialogTitle></DialogHeader>
       <div className="max-h-[60vh] overflow-auto -mx-1 px-1 space-y-2">
         {personnel.length === 0 && (
-          <p className="text-sm text-muted-foreground">No personnel registered. Add people in the Personnel section.</p>
+          <p className="text-sm text-muted-foreground">No hay personal registrado. Agregá personas en la sección de Personal.</p>
         )}
         {personnel.map((p) => {
           const r    = rows[p.id] ?? { hours: "", rate: "", notes: "" };
@@ -687,15 +687,15 @@ function AssignPersonnelDialog({
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <Label className="text-xs">Hours</Label>
+                  <Label className="text-xs">Horas</Label>
                   <Input type="number" min="0" step="0.5" value={r.hours} onChange={(e) => upd(p.id, { hours: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Rate/h ({symbol})</Label>
+                  <Label className="text-xs">Tarifa/h ({symbol})</Label>
                   <Input type="number" min="0" step="0.01" placeholder={String(p.hourly_rate)} value={r.rate} onChange={(e) => upd(p.id, { rate: e.target.value })} />
                 </div>
                 <div>
-                  <Label className="text-xs">Notes</Label>
+                  <Label className="text-xs">Notas</Label>
                   <Input value={r.notes} onChange={(e) => upd(p.id, { notes: e.target.value })} />
                 </div>
               </div>
@@ -704,8 +704,8 @@ function AssignPersonnelDialog({
         })}
       </div>
       <DialogFooter>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button onClick={assignAll}><UserPlus className="h-4 w-4 mr-1" /> Assign selected</Button>
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button onClick={assignAll}><UserPlus className="h-4 w-4 mr-1" /> Asignar seleccionados</Button>
       </DialogFooter>
     </DialogContent>
   );

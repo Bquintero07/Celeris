@@ -9,7 +9,7 @@ import { getAgentConfig } from "../lib/agentConfig.js";
 export const superRouter = Router();
 
 function requireSuper(req: any, res: any, next: any) {
-  if (!req.ctx?.isSuperAdmin) return res.status(403).json({ error: "Super admin only" });
+  if (!req.ctx?.isSuperAdmin) return res.status(403).json({ error: "Solo super admin" });
   next();
 }
 
@@ -91,7 +91,7 @@ superRouter.post("/bootstrap", async (req, res) => {
     `;
     return true;
   });
-  if (!bootstrapped) return res.status(403).json({ error: "Super admin already bootstrapped" });
+  if (!bootstrapped) return res.status(403).json({ error: "El super admin ya fue inicializado" });
   res.status(204).end();
 });
 
@@ -122,7 +122,7 @@ superRouter.get("/orgs/:id", requireSuper, validateUuidParams("id"), async (req,
     WHERE o.id = ${req.params.id}::uuid
     GROUP BY o.id
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Not found" });
+  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
   res.json(rows[0]);
 });
 
@@ -161,7 +161,7 @@ superRouter.patch("/orgs/:id", requireSuper, validateUuidParams("id"), validate(
     WHERE id = ${req.params.id}::uuid
     RETURNING *
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Not found" });
+  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
   res.json(rows[0]);
 });
 
@@ -174,7 +174,7 @@ superRouter.patch("/orgs/:id/modules", requireSuper, validateUuidParams("id"), v
     WHERE id = ${req.params.id}::uuid
     RETURNING id, name, enabled_modules
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Not found" });
+  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
   res.json(rows[0]);
 });
 
@@ -206,7 +206,7 @@ superRouter.patch("/orgs/:id/modules/toggle", requireSuper, validateUuidParams("
       RETURNING id, name, enabled_modules
     `;
   }
-  if (!rows[0]) return res.status(404).json({ error: "Not found" });
+  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
   res.json(rows[0]);
 });
 
@@ -218,7 +218,7 @@ superRouter.patch("/orgs/:id/status", requireSuper, validateUuidParams("id"), va
     WHERE id = ${req.params.id}::uuid
     RETURNING id, name, status
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Not found" });
+  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
   res.json(rows[0]);
 });
 
@@ -287,7 +287,7 @@ superRouter.get("/orgs/:id/detail", requireSuper, validateUuidParams("id"), asyn
            COALESCE(enabled_modules, '{}') AS enabled_modules
     FROM public.organizations WHERE id = ${id}::uuid
   `;
-  if (!orgRows[0]) return res.status(404).json({ error: "Not found" });
+  if (!orgRows[0]) return res.status(404).json({ error: "No encontrado" });
 
   const members = await prisma.$queryRaw<any[]>`
     SELECT p.id, p.full_name, p.email, p.avatar_url,
@@ -318,7 +318,7 @@ superRouter.post("/users", requireSuper, validate(createUserSchema), async (req,
   try {
     user = await createAuthUser({ email, password, full_name });
   } catch (e: any) {
-    return res.status(e.status ?? 500).json({ error: e.message ?? "Could not create user" });
+    return res.status(e.status ?? 500).json({ error: e.message ?? "No se pudo crear el usuario" });
   }
   if (organization_id) {
     await prisma.$transaction([
@@ -340,7 +340,7 @@ superRouter.post("/users/:id/reset-password", requireSuper, validateUuidParams("
   try {
     await setUserPassword(String(req.params.id), (req.body as z.infer<typeof resetPwSchema>).password);
   } catch (e: any) {
-    return res.status(e.status ?? 500).json({ error: e.message ?? "Could not reset password" });
+    return res.status(e.status ?? 500).json({ error: e.message ?? "No se pudo resetear la contraseña" });
   }
   res.status(204).end();
 });
@@ -348,12 +348,12 @@ superRouter.post("/users/:id/reset-password", requireSuper, validateUuidParams("
 // DELETE /api/super/users/:id — removes auth user (profiles/user_roles cascade)
 superRouter.delete("/users/:id", requireSuper, validateUuidParams("id"), async (req, res) => {
   if (req.params.id === req.ctx!.userId) {
-    return res.status(400).json({ error: "You cannot delete your own account" });
+    return res.status(400).json({ error: "No podés eliminar tu propia cuenta" });
   }
   try {
     await deleteAuthUser(String(req.params.id));
   } catch (e: any) {
-    return res.status(e.status ?? 500).json({ error: e.message ?? "Could not delete user" });
+    return res.status(e.status ?? 500).json({ error: e.message ?? "No se pudo eliminar el usuario" });
   }
   res.status(204).end();
 });

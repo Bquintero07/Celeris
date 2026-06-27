@@ -17,7 +17,7 @@ const updateOrgSchema = z.object({
 // GET /api/org
 orgRouter.get("/", async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
   const rows = await prisma.$queryRaw<any[]>`
     SELECT id, name, slug, join_code, primary_color, accent_color, logo_url, created_at, updated_at,
@@ -25,23 +25,23 @@ orgRouter.get("/", async (req, res) => {
            COALESCE(status, 'active') as status
     FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Organization not found" });
+  if (!rows[0]) return res.status(404).json({ error: "Organización no encontrada" });
   res.json(rows[0]);
 });
 
 // PATCH /api/org  { name?, primary_color?, accent_color?, logo_url? }
 orgRouter.patch("/", validate(updateOrgSchema), async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
   if (!req.ctx?.isSuperAdmin && !req.ctx?.roles.includes("admin")) {
-    return res.status(403).json({ error: "Admin only" });
+    return res.status(403).json({ error: "Solo administradores" });
   }
 
   const current = await prisma.$queryRaw<any[]>`
     SELECT name, primary_color, accent_color, logo_url
     FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
   `;
-  if (!current[0]) return res.status(404).json({ error: "Organization not found" });
+  if (!current[0]) return res.status(404).json({ error: "Organización no encontrada" });
 
   const body = req.body as Record<string, unknown>;
   const name          = "name"          in body ? body.name          : current[0].name;

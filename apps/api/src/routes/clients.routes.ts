@@ -38,7 +38,7 @@ clientsRouter.post("/", requirePermission("clients.manage"), validate(createClie
 clientsRouter.patch("/:id", validateUuidParams("id"), requirePermission("clients.manage"), validate(updateClientSchema), async (req, res) => {
   try {
     const row = await svc.upsert(req.ctx!, { ...req.body, id: req.params.id as string });
-    if (!row) return res.status(404).json({ error: "Not found" });
+    if (!row) return res.status(404).json({ error: "No encontrado" });
     res.json(row);
   } catch (err: any) {
     res.status(err.status ?? 500).json({ error: err.message });

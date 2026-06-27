@@ -58,7 +58,7 @@ eventsRouter.get("/", async (req, res) => {
 // GET /api/events/:id
 eventsRouter.get("/:id", validateUuidParams("id"), async (req, res) => {
   const { orgId } = req.ctx!;
-  if (!orgId) return res.status(404).json({ error: "Not found" });
+  if (!orgId) return res.status(404).json({ error: "No encontrado" });
 
   const [events, items] = await Promise.all([
     prisma.$queryRaw<any[]>`
@@ -74,7 +74,7 @@ eventsRouter.get("/:id", validateUuidParams("id"), async (req, res) => {
       ORDER BY ei.category, ei.name
     `,
   ]);
-  if (!events[0]) return res.status(404).json({ error: "Event not found" });
+  if (!events[0]) return res.status(404).json({ error: "Evento no encontrado" });
   res.json({ ...events[0], items });
 });
 
@@ -178,7 +178,7 @@ eventsRouter.patch("/:id", validateUuidParams("id"), requirePermission("events.e
     WHERE id = ${req.params.id}::uuid AND organization_id = ${orgId}::uuid
     RETURNING *
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Not found" });
+  if (!rows[0]) return res.status(404).json({ error: "No encontrado" });
   res.json(rows[0]);
 });
 
@@ -198,9 +198,9 @@ eventsRouter.post("/:id/items", validateUuidParams("id"), validate(eventItemSche
   const event = await prisma.$queryRaw<any[]>`
     SELECT id FROM public.events WHERE id = ${req.params.id}::uuid AND organization_id = ${orgId}::uuid LIMIT 1
   `;
-  if (!event[0]) return res.status(404).json({ error: "Event not found" });
+  if (!event[0]) return res.status(404).json({ error: "Evento no encontrado" });
   if (!(await canWriteEventItems(ctx, req.params.id as string))) {
-    return res.status(403).json({ error: "Forbidden" });
+    return res.status(403).json({ error: "Prohibido" });
   }
 
   const { category, name, description, quantity, unit_cost,
@@ -230,9 +230,9 @@ eventsRouter.post("/:id/items/bulk", validateUuidParams("id"), validate(bulkItem
   const event = await prisma.$queryRaw<any[]>`
     SELECT id FROM public.events WHERE id = ${req.params.id}::uuid AND organization_id = ${orgId}::uuid LIMIT 1
   `;
-  if (!event[0]) return res.status(404).json({ error: "Event not found" });
+  if (!event[0]) return res.status(404).json({ error: "Evento no encontrado" });
   if (!(await canWriteEventItems(ctx, req.params.id as string))) {
-    return res.status(403).json({ error: "Forbidden" });
+    return res.status(403).json({ error: "Prohibido" });
   }
 
   const { items } = req.body as { items: any[] };
@@ -259,9 +259,9 @@ eventsRouter.patch("/items/:itemId", validateUuidParams("itemId"), validate(upda
   const item = await prisma.$queryRaw<any[]>`
     SELECT event_id FROM public.event_items WHERE id = ${req.params.itemId}::uuid AND organization_id = ${orgId}::uuid LIMIT 1
   `;
-  if (!item[0]) return res.status(404).json({ error: "Item not found" });
+  if (!item[0]) return res.status(404).json({ error: "Ítem no encontrado" });
   if (!(await canWriteEventItems(ctx, item[0].event_id))) {
-    return res.status(403).json({ error: "Forbidden" });
+    return res.status(403).json({ error: "Prohibido" });
   }
 
   const { name, category, quantity, unit_cost, description, notes } = req.body;
@@ -288,9 +288,9 @@ eventsRouter.delete("/items/:itemId", validateUuidParams("itemId"), async (req, 
   const item = await prisma.$queryRaw<any[]>`
     SELECT event_id FROM public.event_items WHERE id = ${req.params.itemId}::uuid AND organization_id = ${orgId}::uuid LIMIT 1
   `;
-  if (!item[0]) return res.status(404).json({ error: "Item not found" });
+  if (!item[0]) return res.status(404).json({ error: "Ítem no encontrado" });
   if (!(await canWriteEventItems(ctx, item[0].event_id))) {
-    return res.status(403).json({ error: "Forbidden" });
+    return res.status(403).json({ error: "Prohibido" });
   }
 
   await prisma.$executeRaw`
@@ -318,7 +318,7 @@ async function doTransition(
     SELECT approval_status FROM public.events
     WHERE id = ${eventId}::uuid AND organization_id = ${orgId}::uuid LIMIT 1
   `;
-  if (!events[0]) return res.status(404).json({ error: "Event not found" });
+  if (!events[0]) return res.status(404).json({ error: "Evento no encontrado" });
 
   const from = events[0].approval_status ?? "draft";
   if (!ALLOWED_TRANSITIONS[from]?.includes(to)) {
@@ -395,7 +395,7 @@ eventsRouter.post("/:id/export/excel", validateUuidParams("id"), requirePermissi
     LEFT JOIN public.clients c ON c.id = e.client_id
     WHERE e.id = ${eventId}::uuid AND e.organization_id = ${orgId}::uuid LIMIT 1
   `;
-  if (!events[0]) return res.status(404).json({ error: "Not found" });
+  if (!events[0]) return res.status(404).json({ error: "No encontrado" });
 
   const items = await prisma.$queryRaw<any[]>`
     SELECT category, name, quantity, unit_cost, total_cost, base_cost, markup_pct, notes

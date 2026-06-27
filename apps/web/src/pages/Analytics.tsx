@@ -56,23 +56,23 @@ export function Analytics() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BarChart3 className="h-7 w-7 text-primary" />
-          <h1 className="text-2xl font-display font-bold">Analytics</h1>
+          <h1 className="text-2xl font-display font-bold">Analítica</h1>
         </div>
         <div className="flex items-center gap-2">
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="6m">Last 6 months</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
+              <SelectItem value="30d">Últimos 30 días</SelectItem>
+              <SelectItem value="90d">Últimos 90 días</SelectItem>
+              <SelectItem value="6m">Últimos 6 meses</SelectItem>
+              <SelectItem value="1y">Último año</SelectItem>
             </SelectContent>
           </Select>
           <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "event" | "client")}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="event">By event</SelectItem>
-              <SelectItem value="client">By client</SelectItem>
+              <SelectItem value="event">Por evento</SelectItem>
+              <SelectItem value="client">Por cliente</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -81,9 +81,9 @@ export function Analytics() {
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Revenue", value: fmt(totalRevenue, currency) },
-          { label: "Total Cost",    value: fmt(totalCost,    currency) },
-          { label: "Gross Margin",  value: `${fmt(totalMargin, currency)} (${marginPct}%)` },
+          { label: "Ingresos totales", value: fmt(totalRevenue, currency) },
+          { label: "Costo total",    value: fmt(totalCost,    currency) },
+          { label: "Margen bruto",  value: `${fmt(totalMargin, currency)} (${marginPct}%)` },
         ].map((kpi) => (
           <Card key={kpi.label}>
             <CardHeader className="pb-1"><CardTitle className="text-sm text-muted-foreground">{kpi.label}</CardTitle></CardHeader>
@@ -94,12 +94,12 @@ export function Analytics() {
 
       {/* Margins bar chart */}
       <Card>
-        <CardHeader><CardTitle>Margin by {groupBy}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Margen por {groupBy === "client" ? "cliente" : "evento"}</CardTitle></CardHeader>
         <CardContent>
           {mLoading ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Loading…</p>
+            <p className="text-muted-foreground text-sm py-8 text-center">Cargando…</p>
           ) : margins.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">No data for this period.</p>
+            <p className="text-muted-foreground text-sm py-8 text-center">No hay datos para este período.</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={margins} margin={{ top: 4, right: 16, left: 0, bottom: 40 }}>
@@ -113,8 +113,8 @@ export function Analytics() {
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v: any) => fmt(Number(v), currency)} />
                 <Legend />
-                <Bar dataKey={groupBy === "client" ? "total_revenue" : "revenue"} name="Revenue" fill={primary} radius={[4, 4, 0, 0]} />
-                <Bar dataKey={groupBy === "client" ? "total_cost" : "total_cost"} name="Cost" fill="#E8DEFF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={groupBy === "client" ? "total_revenue" : "revenue"} name="Ingresos" fill={primary} radius={[4, 4, 0, 0]} />
+                <Bar dataKey={groupBy === "client" ? "total_cost" : "total_cost"} name="Costo" fill="#E8DEFF" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -123,12 +123,12 @@ export function Analytics() {
 
       {/* Revenue over time */}
       <Card>
-        <CardHeader><CardTitle>Revenue over time</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Ingresos en el tiempo</CardTitle></CardHeader>
         <CardContent>
           {rLoading ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Loading…</p>
+            <p className="text-muted-foreground text-sm py-8 text-center">Cargando…</p>
           ) : revenue.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">No data for this period.</p>
+            <p className="text-muted-foreground text-sm py-8 text-center">No hay datos para este período.</p>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={revenue} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
@@ -137,9 +137,9 @@ export function Analytics() {
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v: any) => fmt(Number(v), currency)} />
                 <Legend />
-                <Line type="monotone" dataKey="revenue" name="Revenue" stroke={primary} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="cost"    name="Cost"    stroke="#A57CFF" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="margin"  name="Margin"  stroke="#22c55e" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="revenue" name="Ingresos" stroke={primary} strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="cost"    name="Costo"    stroke="#A57CFF" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="margin"  name="Margen"  stroke="#22c55e" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -149,7 +149,7 @@ export function Analytics() {
       {/* Top 6 events by revenue — pie */}
       {groupBy === "event" && margins.length > 0 && (
         <Card>
-          <CardHeader><CardTitle>Top events by revenue</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Top eventos por ingresos</CardTitle></CardHeader>
           <CardContent className="flex justify-center">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>

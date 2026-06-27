@@ -18,7 +18,7 @@ export async function generateInvoice(
   eventId: string,
   opts: { currency?: string; showMargin?: boolean } = {},
 ): Promise<{ base64: string; filename: string }> {
-  if (!ctx.orgId) throw Object.assign(new Error("No organization"), { status: 403 });
+  if (!ctx.orgId) throw Object.assign(new Error("Sin organización"), { status: 403 });
 
   // Fetch event
   const events = await prisma.$queryRaw<any[]>`
@@ -29,7 +29,7 @@ export async function generateInvoice(
     WHERE e.id = ${eventId}::uuid AND e.organization_id = ${ctx.orgId}::uuid LIMIT 1
   `;
   const event = events[0];
-  if (!event) throw Object.assign(new Error("Event not found"), { status: 404 });
+  if (!event) throw Object.assign(new Error("Evento no encontrado"), { status: 404 });
   // Fetch org branding
   const orgs = await prisma.$queryRaw<any[]>`
     SELECT name, primary_color, accent_color, logo_url FROM public.organizations

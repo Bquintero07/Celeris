@@ -16,7 +16,7 @@ const aiSuggestSchema = z.object({
 // GET /api/quotes/:eventId
 quotesRouter.get("/:eventId", requirePermission("quotes.view"), validateUuidParams("eventId"), async (req, res) => {
   const quote = await svc.getQuote(req.ctx!, req.params.eventId as string);
-  if (!quote) return res.status(404).json({ error: "Event not found" });
+  if (!quote) return res.status(404).json({ error: "Evento no encontrado" });
   res.json(quote);
 });
 

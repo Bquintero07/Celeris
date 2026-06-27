@@ -35,12 +35,12 @@ personnelRouter.post("/", requirePermission("crew.edit"), async (req, res) => {
   const result = schema.safeParse(req.body);
   if (!result.success) {
     return res.status(400).json({
-      error: "Validation failed",
+      error: "Datos inválidos",
       issues: result.error.issues.map((i) => ({ field: i.path.join(".") || "body", message: i.message })),
     });
   }
   const data = await svc.upsert(req.ctx!, result.data);
-  if (!data) return res.status(404).json({ error: "Not found" });
+  if (!data) return res.status(404).json({ error: "No encontrado" });
   res.status(req.body.id ? 200 : 201).json(data);
 });
 

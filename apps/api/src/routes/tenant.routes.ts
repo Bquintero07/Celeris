@@ -15,13 +15,13 @@ type OrgRow = {
 // GET /api/tenant/config -> modules + branding + roles for the current tenant
 tenantRouter.get("/config", async (req, res) => {
   const orgId = req.ctx?.orgId;
-  if (!orgId) return res.status(403).json({ error: "No organization" });
+  if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
   const rows = await prisma.$queryRaw<OrgRow[]>`
     SELECT name, enabled_modules, logo_url, primary_color, accent_color
     FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
   `;
-  if (!rows[0]) return res.status(404).json({ error: "Organization not found" });
+  if (!rows[0]) return res.status(404).json({ error: "Organización no encontrada" });
   const org = rows[0];
 
   const config: TenantConfig = {

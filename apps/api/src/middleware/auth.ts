@@ -21,7 +21,7 @@ type RoleRow = { role: string };
 export async function auth(req: Request, res: Response, next: NextFunction) {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    if (!token) return res.status(401).json({ error: "No autorizado" });
 
     const { payload } = await jwtVerify(token, JWKS);
     const userId = payload.sub as string;
@@ -47,6 +47,6 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
     next();
   } catch (err) {
     console.error("[auth] token error:", err);
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Token inválido" });
   }
 }

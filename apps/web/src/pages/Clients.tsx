@@ -46,7 +46,7 @@ export function Clients() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clients"] });
-      toast.success(editing ? "Client updated" : "Client created");
+      toast.success(editing ? "Cliente actualizado" : "Cliente creado");
       setOpen(false);
     },
     onError: (e: any) => toast.error(e.message),
@@ -56,7 +56,7 @@ export function Clients() {
     mutationFn: (id: string) => api.clients.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clients"] });
-      toast.success("Client deleted");
+      toast.success("Cliente eliminado");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -70,31 +70,31 @@ export function Clients() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <UserRound className="h-7 w-7 text-primary" />
-          <h1 className="text-2xl font-display font-bold">Clients</h1>
+          <h1 className="text-2xl font-display font-bold">Clientes</h1>
         </div>
         {canEdit && (
           <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Add client
+            <Plus className="h-4 w-4 mr-1" /> Agregar cliente
           </Button>
         )}
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Client directory</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Directorio de clientes</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground text-sm py-4">Loading…</p>
+            <p className="text-muted-foreground text-sm py-4">Cargando…</p>
           ) : clients.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">No clients yet.</p>
+            <p className="text-muted-foreground text-sm py-4">Aún no hay clientes.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Contact</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Contacto</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Tax ID</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>NIT</TableHead>
                   {canEdit && <TableHead className="w-20" />}
                 </TableRow>
               </TableHeader>
@@ -114,7 +114,7 @@ export function Clients() {
                           </Button>
                           <Button
                             size="icon" variant="ghost"
-                            onClick={() => { if (confirm("Delete client?")) deleteMut.mutate(c.id); }}
+                            onClick={() => { if (confirm("¿Eliminar cliente?")) deleteMut.mutate(c.id); }}
                           >
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
@@ -132,15 +132,15 @@ export function Clients() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit client" : "New client"}</DialogTitle>
+            <DialogTitle>{editing ? "Editar cliente" : "Nuevo cliente"}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">
-              <Label>Company name *</Label>
+              <Label>Nombre de la empresa *</Label>
               <Input value={form.name ?? ""} onChange={(e) => set("name", e.target.value)} placeholder="Acme Events" />
             </div>
             <div className="space-y-1">
-              <Label>Contact person</Label>
+              <Label>Persona de contacto</Label>
               <Input value={form.contact_name ?? ""} onChange={(e) => set("contact_name", e.target.value)} />
             </div>
             <div className="space-y-1">
@@ -148,26 +148,26 @@ export function Clients() {
               <Input type="email" value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label>Phone</Label>
+              <Label>Teléfono</Label>
               <Input value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label>Tax ID (NIT)</Label>
+              <Label>NIT / ID fiscal</Label>
               <Input value={form.tax_id ?? ""} onChange={(e) => set("tax_id", e.target.value)} />
             </div>
             <div className="col-span-2 space-y-1">
-              <Label>Address</Label>
+              <Label>Dirección</Label>
               <Input value={form.address ?? ""} onChange={(e) => set("address", e.target.value)} />
             </div>
             <div className="col-span-2 space-y-1">
-              <Label>Notes</Label>
+              <Label>Notas</Label>
               <Input value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button onClick={() => saveMut.mutate()} disabled={!form.name || saveMut.isPending}>
-              {saveMut.isPending ? "Saving…" : "Save"}
+              {saveMut.isPending ? "Guardando…" : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>

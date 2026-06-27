@@ -24,7 +24,7 @@ export function Chat() {
   if (!isAdmin && !isSuperAdmin) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        You don't have permission to access this feature.
+        No tenés permiso para acceder a esta función.
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function Chat() {
       const { message } = await api.ai.chat(next, currency);
       setMessages([...next, { role: "assistant", content: message }]);
     } catch (e: any) {
-      setMessages([...next, { role: "assistant", content: `Error: ${e.message ?? "Something went wrong"}` }]);
+      setMessages([...next, { role: "assistant", content: `Error: ${e.message ?? "Algo salió mal"}` }]);
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export function Chat() {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
             <Bot className="h-10 w-10 opacity-30" />
-            <p className="text-sm">Ask anything about your events, clients, or finances.</p>
+            <p className="text-sm">Preguntá lo que quieras sobre tus eventos, clientes o finanzas.</p>
             <div className="flex flex-wrap gap-2 justify-center mt-2">
               {[
                 "¿Cuántos eventos tenemos aprobados?",
@@ -121,7 +121,7 @@ export function Chat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Ask about your events, clients, or finances… (Enter to send)"
+            placeholder="Preguntá sobre tus eventos, clientes o finanzas… (Enter para enviar)"
             rows={1}
             className="resize-none min-h-[2.5rem] max-h-40"
             disabled={loading}
@@ -131,7 +131,7 @@ export function Chat() {
           </Button>
         </div>
         <p className="text-center text-[0.65rem] text-muted-foreground mt-1.5">
-          Shift+Enter for new line · Enter to send
+          Shift+Enter para nueva línea · Enter para enviar
         </p>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, Download } from "lucide-react";
 import { useCurrency } from "@/lib/currency";
+import { APPROVAL_STATUS_LABELS, label } from "@/lib/labels";
 
 function downloadBase64(base64: string, filename: string) {
   const link = document.createElement("a");
@@ -33,7 +34,7 @@ export function Billing() {
     mutationFn: (eventId: string) => api.billing.generateInvoice(eventId, currency),
     onSuccess: ({ base64, filename }) => {
       downloadBase64(base64, filename);
-      toast.success("Invoice downloaded");
+      toast.success("Factura descargada");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -42,30 +43,30 @@ export function Billing() {
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
         <Receipt className="h-7 w-7 text-primary" />
-        <h1 className="text-2xl font-display font-bold">Billing</h1>
+        <h1 className="text-2xl font-display font-bold">Facturación</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Approved &amp; sent quotes</CardTitle>
+          <CardTitle>Cotizaciones aprobadas y enviadas</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            These invoices do not integrate with DIAN. For fiscal invoicing, export the PDF and submit manually.
+            Estas facturas no se integran con la DIAN. Para facturación fiscal, exportá el PDF y preséntalo manualmente.
           </p>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-muted-foreground text-sm py-4">Loading…</p>
+            <p className="text-muted-foreground text-sm py-4">Cargando…</p>
           ) : invoices.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">No approved quotes yet.</p>
+            <p className="text-muted-foreground text-sm py-4">Aún no hay cotizaciones aprobadas.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Revenue ({currency})</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Evento</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Ingresos ({currency})</TableHead>
+                  <TableHead>Estado</TableHead>
                   <TableHead className="w-28" />
                 </TableRow>
               </TableHeader>
@@ -76,7 +77,7 @@ export function Billing() {
                     <TableCell>{inv.client_name ?? "—"}</TableCell>
                     <TableCell>
                       {inv.start_date
-                        ? new Date(inv.start_date).toLocaleDateString("en-US")
+                        ? new Date(inv.start_date).toLocaleDateString("es-CO")
                         : "—"}
                     </TableCell>
                     <TableCell>
@@ -84,7 +85,7 @@ export function Billing() {
                     </TableCell>
                     <TableCell>
                       <Badge className={STATUS_COLORS[inv.approval_status] ?? ""} variant="outline">
-                        {inv.approval_status}
+                        {label(APPROVAL_STATUS_LABELS, inv.approval_status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
