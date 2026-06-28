@@ -4,7 +4,8 @@
 
 ## Features
 
-- **Events & quotes** — create events, build itemized quote lines, track margin/profit per line and per quote
+- **Events & quotes** — create events manually or with AI, build itemized quote lines, track margin/profit per line and per quote
+- **AI event planner** — generate a full event plan from a natural-language brief: it classifies the event by attendance tier (T1–T6), scales quantities to the audience, prices with Colombian market ranges, and marks each item as owned (`propio`) vs external. Financials are computed deterministically (cost = Σ items, revenue = cost / (1 − margin), default margin per event type) so cost/revenue/margin always cohere; owned inventory is costed at a wear fraction of its registered value, not its full asset cost
 - **AI quote assistant** — a dedicated agent suggests quote line items (equipment, crew, suppliers) from a natural-language brief and the tenant's own inventory
 - **AI chat assistant** — a conversational agent that answers questions about the tenant's events, clients, and finances by querying live data through tool calls (admin-only)
 - **Knowledge base (RAG)** — upload documents per tenant; they are ingested via n8n into a pgvector store so the AI can answer from them
