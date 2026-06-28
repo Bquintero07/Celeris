@@ -22,6 +22,15 @@ logger = logging.getLogger("celeris.agent")
 
 AGENT_SHARED_SECRET = os.environ.get("AGENT_SHARED_SECRET")
 
+# Default gross margin per event type (Colombian market). Revenue is derived from
+# cost as revenue = cost / (1 - margin). Enforced in code because LLMs are unreliable
+# at this arithmetic. ponytail: constants here; make configurable only if operators
+# need per-event-type overrides.
+PLAN_DEFAULT_MARGIN = {
+    "corporativo": 0.30, "charla": 0.30, "exposicion": 0.30, "privado": 0.30,
+    "boda": 0.35, "concierto": 0.25, "publico": 0.25, "otro": 0.30,
+}
+
 
 def require_shared_secret(authorization: str | None = Header(default=None)) -> None:
     """Only the Node API (holder of AGENT_SHARED_SECRET) may call paid/AI endpoints."""
@@ -67,16 +76,22 @@ def plan_event(req: EventPlanRequest):
         )
         plan = EventPlanResponse.model_validate_json(content)
 
-        # Hard-enforce the budget cap regardless of what the model returned.
-        if req.budget_cap and req.budget_cap > 0 and plan.items:
+        # Deterministic financials — the model proposes the line items; the arithmetic
+        # is enforced here so cost, revenue and margin always cohere (the model is
+        # unreliable at the revenue = cost / (1 - margin) formula).
+        total = sum(item.quantity * item.unit_cost for item in plan.items) if plan.items else 0.0
+
+        # Hard-enforce the budget cap by scaling item costs down to fit.
+        if req.budget_cap and req.budget_cap > 0 and total > req.budget_cap:
+            scale = req.budget_cap / total
+            for item in plan.items:
+                item.unit_cost = round(item.unit_cost * scale, 2)
             total = sum(item.quantity * item.unit_cost for item in plan.items)
-            if total > req.budget_cap:
-                scale = req.budget_cap / total
-                for item in plan.items:
-                    item.unit_cost = round(item.unit_cost * scale, 2)
-                plan.estimated_budget = req.budget_cap
-            else:
-                plan.estimated_budget = round(total, 2)
+
+        if total > 0:
+            margin = PLAN_DEFAULT_MARGIN.get(plan.event_type, 0.30)
+            plan.estimated_budget = round(total, 2)
+            plan.estimated_revenue = round(total / (1 - margin), 2)
 
         return plan
     except ValidationError as e:
