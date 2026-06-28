@@ -31,6 +31,11 @@ PLAN_DEFAULT_MARGIN = {
     "boda": 0.35, "concierto": 0.25, "publico": 0.25, "otro": 0.30,
 }
 
+# Owned inventory is already paid for: it costs the event only a wear/usage fraction
+# of its registered value (the doc's "desgaste 10-20%"), not the full asset value.
+# ponytail: constant; make configurable from the operator panel if operators ask.
+OWNED_WEAR_FACTOR = 0.15
+
 
 def require_shared_secret(authorization: str | None = Header(default=None)) -> None:
     """Only the Node API (holder of AGENT_SHARED_SECRET) may call paid/AI endpoints."""
@@ -75,6 +80,12 @@ def plan_event(req: EventPlanRequest):
             config=req,
         )
         plan = EventPlanResponse.model_validate_json(content)
+
+        # Owned inventory is already paid for — charge the event only a wear fraction
+        # of its registered value, not the full asset cost (which would inflate totals).
+        for item in plan.items:
+            if item.source == "owned":
+                item.unit_cost = round(item.unit_cost * OWNED_WEAR_FACTOR, 2)
 
         # Deterministic financials — the model proposes the line items; the arithmetic
         # is enforced here so cost, revenue and margin always cohere (the model is

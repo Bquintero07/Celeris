@@ -80,9 +80,12 @@ a short summary, and all line items needed.
 
 Apply the planning, tier and pricing rules given in the system instructions, together
 with the price references and inventory above. Scale every quantity to the estimated
-attendees. Prefer owned inventory (set source="owned", write "propio" in notes); for
-anything not owned set source="external" and use a knowledge-base price when available,
-otherwise a conservative Colombian market rate (write "estimado" in notes).
+attendees. Choose only tier-appropriate items — do not add large owned assets (stages,
+tents, roofs, trussing) to a small event just because they exist in inventory.
+For owned items set source="owned", write "propio" in notes, and use the registered
+cost from the owned inventory list (the system applies a wear discount automatically).
+For anything not owned set source="external" and use a knowledge-base price when
+available, otherwise a conservative Colombian market rate (write "estimado" in notes).
 
 CONSISTENCY: estimated_budget must equal the sum of (quantity × unit_cost) across all
 items. estimated_revenue should reflect a sensible margin over estimated_budget.
