@@ -73,5 +73,10 @@ app.use("/api/super",        superRouter);
 app.use("/api/ai",           aiRouter);
 app.use("/api/documents",    documentsRouter);
 
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error("[unhandled]", err);
+  res.status(err.status ?? 500).json({ error: err.message ?? "Error interno" });
+});
+
 const port = Number(process.env.PORT ?? 3000);
 app.listen(port, () => console.log(`API listening on :${port}`));

@@ -1,5 +1,5 @@
 {
-  "name": "RAG — Bulk Load Existing Files",
+  "name": "RAG Celeris",
   "nodes": [
     {
       "parameters": {
@@ -10,15 +10,15 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        384,
-        240
+        1040,
+        80
       ],
-      "id": "6f71813a-4bc6-4eb1-8d7c-073abc7f099a",
+      "id": "9dfc31c8-b982-4043-931f-91c9070fb3ec",
       "name": "Embeddings OpenAI",
       "credentials": {
         "openAiApi": {
-          "id": "eXJQnPruxzSGv0it",
-          "name": "n8n free OpenAI API credits"
+          "id": "PQQ73WdjjZoyeeYM",
+          "name": "OpenAI account"
         }
       }
     },
@@ -44,44 +44,37 @@
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        656,
-        208
+        1472,
+        32
       ],
-      "id": "db1096ad-da08-422a-b594-a39bd89822b7",
+      "id": "3b05337c-d5d8-49a4-986f-952528cd6c24",
       "name": "Default Data Loader"
-    },
-    {
-      "parameters": {
-        "chunkSize": 500,
-        "chunkOverlap": 50
-      },
-      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
-      "typeVersion": 1,
-      "position": [
-        704,
-        448
-      ],
-      "id": "2c8eb2f1-07f5-4b2e-b05b-bebfbd32e229",
-      "name": "Token Splitter"
     },
     {
       "parameters": {
         "mode": "insert",
         "tableName": {
           "__rl": true,
+          "value": "documents",
           "mode": "list",
-          "value": ""
+          "cachedResultName": "documents"
         },
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1.3,
       "position": [
-        432,
-        0
+        1248,
+        -160
       ],
-      "id": "db4dcda2-3157-4d7d-9bc6-ddebad2f0df3",
-      "name": "Supabase Vector Store"
+      "id": "eedc83c6-c288-42d5-871f-7a4fd128d70f",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "IBsFyCTvuKRfBrMx",
+          "name": "Supabase account"
+        }
+      }
     },
     {
       "parameters": {
@@ -95,10 +88,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -48,
-        0
+        864,
+        -144
       ],
-      "id": "0c6824e8-9994-4307-b31f-50318068aedd",
+      "id": "4c30a888-5211-4970-934e-526786268da7",
       "name": "Webhook",
       "webhookId": "506dee95-24d2-4f39-9d5e-95f206aa43a3",
       "credentials": {
@@ -107,6 +100,21 @@
           "name": "Header Auth"
         }
       }
+    },
+    {
+      "parameters": {
+        "chunkSize": 350,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        192
+      ],
+      "id": "8f9209cf-ffae-4892-89ad-7d93516688e6",
+      "name": "Recursive Character Text Splitter"
     }
   ],
   "pinData": {},
@@ -133,17 +141,6 @@
         ]
       ]
     },
-    "Token Splitter": {
-      "ai_textSplitter": [
-        [
-          {
-            "node": "Default Data Loader",
-            "type": "ai_textSplitter",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Webhook": {
       "main": [
         [
@@ -154,15 +151,28 @@
           }
         ]
       ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "d6d3422c-7a80-43c2-8f21-672e98b8dcd8",
+  "versionId": "5a5c120a-f9c4-430b-b7ee-a6d4446fa6f7",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "ff2d3223eb71422e6fb7b0eace614ca75ba3239d96032c804daba32fd4ff02c1"
   },
   "nodeGroups": [],

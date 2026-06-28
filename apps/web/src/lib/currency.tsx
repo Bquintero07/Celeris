@@ -12,6 +12,7 @@ type Ctx = {
   currency: CurrencyCode;
   setCurrency: (c: CurrencyCode) => void;
   symbol: string;
+  copPerUsd: number;
   /** Converts an amount stored in COP (the base currency) to the active currency and formats it. */
   format: (n: number, opts?: { decimals?: number }) => string;
 };
@@ -69,7 +70,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         minimumFractionDigits: 0,
       }).format(amount);
     };
-    return { currency, setCurrency, symbol: def.symbol, format: fmt };
+    return { currency, setCurrency, symbol: def.symbol, copPerUsd, format: fmt };
   }, [currency, copPerUsd]);
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;

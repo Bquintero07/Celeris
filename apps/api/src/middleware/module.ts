@@ -10,12 +10,17 @@ export function requireModule(moduleKey: ModuleKey) {
     const orgId = req.ctx?.orgId;
     if (!orgId) return res.status(403).json({ error: "Sin organización" });
 
-    const rows = await prisma.$queryRaw<OrgRow[]>`
-      SELECT enabled_modules FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
-    `;
-    const enabled = (rows[0]?.enabled_modules ?? []) as string[];
-    if (!enabled.includes(moduleKey)) {
-      return res.status(403).json({ error: `Module ${moduleKey} not enabled` });
+    try {
+      const rows = await prisma.$queryRaw<OrgRow[]>`
+        SELECT enabled_modules FROM public.organizations WHERE id = ${orgId}::uuid LIMIT 1
+      `;
+      const enabled = (rows[0]?.enabled_modules ?? []) as string[];
+      if (!enabled.includes(moduleKey)) {
+        return res.status(403).json({ error: `Module ${moduleKey} not enabled` });
+      }
+    } catch (err) {
+      console.error("[requireModule] db error:", err);
+      return res.status(500).json({ error: "Error interno al verificar módulos" });
     }
     next();
   };

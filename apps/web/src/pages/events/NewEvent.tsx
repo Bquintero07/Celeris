@@ -23,7 +23,7 @@ const templates = [
 
 export function NewEvent() {
   const nav = useNavigate();
-  const { currency, format: fmt, symbol } = useCurrency();
+  const { currency, format: fmt, symbol, copPerUsd } = useCurrency();
   const [prompt, setPrompt] = useState("");
   const [template, setTemplate] = useState<string | null>(null);
   const [budgetCap, setBudgetCap] = useState<string>("");
@@ -36,7 +36,9 @@ export function NewEvent() {
     setLoading(true);
     try {
       const cap = budgetCap ? Number(budgetCap) : null;
-      const result = await api.ai.generate({ prompt, template, currency, budget_cap: cap && cap > 0 ? cap : null });
+      // Agent always works in COP (base currency). Convert from display currency if needed.
+      const capInCop = cap && cap > 0 ? (currency === "USD" ? Math.round(cap * copPerUsd) : cap) : null;
+      const result = await api.ai.generate({ prompt, template, currency: "COP", budget_cap: capInCop });
       setPlan(result);
       toast.success("Plan generado. Revisalo antes de guardar.");
     } catch (e: any) {

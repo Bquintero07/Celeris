@@ -127,7 +127,9 @@ def gather_plan_context(org_id: str, brief: str) -> dict:
             crew = [_row(dict(r)) for r in cur.fetchall()]
 
             docs = []
+            price_docs = []
             try:
+                # General context search: based on the event brief
                 embedding = openai_client.embeddings.create(
                     model=EMBED_MODEL, input=brief, dimensions=EMBED_DIMS,
                 ).data[0].embedding
@@ -140,10 +142,31 @@ def gather_plan_context(org_id: str, brief: str) -> dict:
                     (org_id, vec_str),
                 )
                 docs = [{"content": r["content"], "source": r["source"]} for r in cur.fetchall()]
-            except Exception:
-                docs = []  # RAG is best-effort; never block a plan on it.
 
-            return {"inventory": inventory, "crew": crew, "docs": docs}
+                # Price-focused search: separate query to surface tariff/price lists
+                price_query = f"tarifas precios costos alquiler proveedor {brief}"
+                price_emb = openai_client.embeddings.create(
+                    model=EMBED_MODEL, input=price_query, dimensions=EMBED_DIMS,
+                ).data[0].embedding
+                price_vec = "[" + ",".join(str(x) for x in price_emb) + "]"
+                cur.execute(
+                    """SELECT content, metadata->>'name' AS source
+                       FROM public.documents
+                       WHERE metadata->>'org_id' = %s
+                       ORDER BY embedding <=> %s::vector LIMIT 4""",
+                    (org_id, price_vec),
+                )
+                existing_contents = {d["content"] for d in docs}
+                price_docs = [
+                    {"content": r["content"], "source": r["source"]}
+                    for r in cur.fetchall()
+                    if r["content"] not in existing_contents
+                ]
+            except Exception:
+                docs = []
+                price_docs = []  # RAG is best-effort; never block a plan on it.
+
+            return {"inventory": inventory, "crew": crew, "docs": docs, "price_docs": price_docs}
     finally:
         conn.close()
 
