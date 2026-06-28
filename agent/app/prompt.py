@@ -78,20 +78,11 @@ Task: propose a full event plan — title, event type, description, estimated at
 estimated budget (your production cost), estimated revenue (what you charge the client),
 a short summary, and all line items needed.
 
-QUANTITY RULES:
-- Scale every quantity to the estimated attendees: ~1 seat per attendee, catering per
-  person, staff/security by standard ratios. Never use token quantities (e.g. 10 chairs
-  for 60 people).
-
-PRICING RULES — follow this priority strictly, in order:
-1. OWNED INVENTORY: if the item exists in owned inventory, use its exact registered
-   unit_cost. Set source="owned". Write "propio" in notes.
-2. KNOWLEDGE BASE PRICE: if the price references above contain a price for this item
-   or a similar one, use it. Set source="external". Write the source document name in notes.
-3. ESTIMATED: only when no reference exists, use a conservative low-end market rate
-   for Colombia. Set source="external". Write "estimado" in notes so the operator knows to verify.
-Never inflate prices. When estimating, lean toward the lower end of realistic market
-rates — the operator will adjust up if needed.
+Apply the planning, tier and pricing rules given in the system instructions, together
+with the price references and inventory above. Scale every quantity to the estimated
+attendees. Prefer owned inventory (set source="owned", write "propio" in notes); for
+anything not owned set source="external" and use a knowledge-base price when available,
+otherwise a conservative Colombian market rate (write "estimado" in notes).
 
 CONSISTENCY: estimated_budget must equal the sum of (quantity × unit_cost) across all
 items. estimated_revenue should reflect a sensible margin over estimated_budget.
