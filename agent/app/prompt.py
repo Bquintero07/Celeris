@@ -82,6 +82,10 @@ Apply the planning, tier and pricing rules given in the system instructions, tog
 with the price references and inventory above. Scale every quantity to the estimated
 attendees. Choose only tier-appropriate items — do not add large owned assets (stages,
 tents, roofs, trussing) to a small event just because they exist in inventory.
+For catering, default to a MODERATE option (coffee break or buffet, lower-to-mid of the
+range). Only use premium catering (cena de gala / high-end) when the brief explicitly
+asks for it ("gala", "premium", "cena formal", etc.). Apply the same lower-to-mid
+default to every other line unless the brief asks for premium.
 For owned items set source="owned", write "propio" in notes, and use the registered
 cost from the owned inventory list (the system applies a wear discount automatically).
 For anything not owned set source="external" and use a knowledge-base price when
