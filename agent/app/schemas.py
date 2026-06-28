@@ -114,11 +114,6 @@ class EventPlanItem(BaseModel):
     def normalize_source(cls, v) -> str:
         return "owned" if str(v).strip().lower() == "owned" else "external"
 
-    @field_validator("source", mode="before")
-    @classmethod
-    def normalize_source(cls, v) -> str:
-        return "owned" if str(v).strip().lower() == "owned" else "external"
-
 
 class EventPlanResponse(BaseModel):
     title: str
