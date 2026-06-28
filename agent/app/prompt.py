@@ -85,11 +85,11 @@ QUANTITY RULES:
 
 PRICING RULES — follow this priority strictly, in order:
 1. OWNED INVENTORY: if the item exists in owned inventory, use its exact registered
-   unit_cost. Write "propio" in notes.
+   unit_cost. Set source="owned". Write "propio" in notes.
 2. KNOWLEDGE BASE PRICE: if the price references above contain a price for this item
-   or a similar one, use it. Write the source document name in notes.
+   or a similar one, use it. Set source="external". Write the source document name in notes.
 3. ESTIMATED: only when no reference exists, use a conservative low-end market rate
-   for Colombia. Write "estimado" in notes so the operator knows to verify.
+   for Colombia. Set source="external". Write "estimado" in notes so the operator knows to verify.
 Never inflate prices. When estimating, lean toward the lower end of realistic market
 rates — the operator will adjust up if needed.
 
@@ -103,4 +103,4 @@ iluminacion, transporte, seguridad, permisos, marketing, extras.
 Return ONLY a JSON object with this exact shape:
 {{"title":str,"event_type":str,"description":str,"estimated_attendees":int,
 "estimated_budget":number,"estimated_revenue":number,"summary":str,
-"items":[{{"category":str,"name":str,"description":str|null,"quantity":int,"unit_cost":number,"notes":str|null}}]}}"""
+"items":[{{"category":str,"name":str,"description":str|null,"quantity":int,"unit_cost":number,"source":"owned"|"external","notes":str|null}}]}}"""

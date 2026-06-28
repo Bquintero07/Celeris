@@ -80,6 +80,7 @@ class EventPlanItem(BaseModel):
     description: str | None = None
     quantity: int
     unit_cost: float
+    source: str = "external"
     notes: str | None = None
 
     @field_validator("category", mode="before")
@@ -107,6 +108,16 @@ class EventPlanItem(BaseModel):
             return max(0.0, float(v))
         except (TypeError, ValueError):
             return 0.0
+
+    @field_validator("source", mode="before")
+    @classmethod
+    def normalize_source(cls, v) -> str:
+        return "owned" if str(v).strip().lower() == "owned" else "external"
+
+    @field_validator("source", mode="before")
+    @classmethod
+    def normalize_source(cls, v) -> str:
+        return "owned" if str(v).strip().lower() == "owned" else "external"
 
 
 class EventPlanResponse(BaseModel):

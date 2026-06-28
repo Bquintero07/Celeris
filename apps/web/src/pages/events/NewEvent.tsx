@@ -196,6 +196,10 @@ export function NewEvent() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">{label(CATEGORY_LABELS, it.category)}</Badge>
+                        {it.source === "owned"
+                          ? <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700 border-emerald-300 dark:text-emerald-400">Propio</Badge>
+                          : <Badge variant="secondary" className="text-[10px]">Externo</Badge>
+                        }
                         <span className="font-medium">{it.name}</span>
                       </div>
                       {it.description && <div className="text-xs text-muted-foreground mt-1">{it.description}</div>}
