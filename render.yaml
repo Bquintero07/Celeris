@@ -54,3 +54,5 @@ services:
         value: gpt-4o-mini
       - key: AGENT_SHARED_SECRET
         sync: false
+      - key: DATABASE_URL
+        sync: false
