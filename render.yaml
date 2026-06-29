@@ -25,6 +25,16 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: N8N_WEBHOOK_URL
+        sync: false
+      - key: N8N_WEBHOOK_URL_TEST
+        sync: false
+      - key: N8N_WEBHOOK_SECRET
+        sync: false
 
   # ── Celeris AI Agent (Python + FastAPI) ──────────────────────────────────────
   - type: web
