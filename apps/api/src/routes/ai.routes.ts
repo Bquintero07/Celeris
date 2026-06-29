@@ -25,7 +25,8 @@ const chatSchema = z.object({
   currency: z.string().length(3).optional(),
 });
 
-const agentUrl = () => process.env.AI_SERVICE_URL ?? "http://localhost:8000";
+// strip trailing slashes so AI_SERVICE_URL="https://host/" doesn't produce "host//chat" (404)
+const agentUrl = () => (process.env.AI_SERVICE_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 const agentHeaders = () => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${process.env.AGENT_SHARED_SECRET ?? ""}`,
