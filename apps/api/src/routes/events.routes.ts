@@ -78,12 +78,21 @@ eventsRouter.get("/:id", validateUuidParams("id"), async (req, res) => {
   res.json({ ...events[0], items });
 });
 
+// Accept either a date-only string ("2026-07-15", from <input type="date"> and AI plans)
+// or a full ISO datetime, and normalize to ISO with offset. Empty string -> null.
+const eventDate = z.preprocess((v) => {
+  if (v === "" || v == null) return null;
+  if (typeof v !== "string") return v;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? v : d.toISOString();
+}, z.string().datetime({ offset: true }).nullable().optional());
+
 const createEventSchema = z.object({
   title:       z.string().min(1, "title is required"),
   event_type:  EventType.optional(),
   status:      EventStatus.optional(),
-  start_date:  z.string().datetime({ offset: true }).optional().nullable(),
-  end_date:    z.string().datetime({ offset: true }).optional().nullable(),
+  start_date:  eventDate,
+  end_date:    eventDate,
   location:    z.string().optional().nullable(),
   budget:      z.number().nonnegative().optional().nullable(),
   revenue:     z.number().nonnegative().optional().nullable(),
