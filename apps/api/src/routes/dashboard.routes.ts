@@ -27,7 +27,7 @@ dashboardRouter.get("/stats", async (req, res) => {
     prisma.$queryRaw<EventRow[]>`
       SELECT id, title, start_date, event_type, status FROM public.events
       WHERE organization_id = ${orgId}::uuid
-        AND start_date >= now() AND status <> 'cancelado'
+        AND start_date >= date_trunc('day', now()) AND status <> 'cancelado'
       ORDER BY start_date ASC LIMIT 5
     `,
     prisma.$queryRaw<EventRow[]>`
