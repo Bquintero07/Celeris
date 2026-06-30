@@ -91,6 +91,13 @@ cost from the owned inventory list (the system applies a wear discount automatic
 For anything not owned set source="external" and use a knowledge-base price when
 available, otherwise a conservative Colombian market rate (write "estimado" in notes).
 
+CREW: for every staffing role this event needs, FIRST look at the AVAILABLE IN-HOUSE CREW
+list above. If a listed person's role fits the need, you MUST use them instead of hiring
+out — add a "personal" line with source="owned", their full name in notes, and
+unit_cost = their hourly rate. Only hire external personnel (source="external", market
+rate, "estimado" in notes) for roles that NO in-house crew member covers. Never invent
+external staff for a role your in-house crew already fills.
+
 CONSISTENCY: estimated_budget must equal the sum of (quantity × unit_cost) across all
 items. estimated_revenue should reflect a sensible margin over estimated_budget.
 
